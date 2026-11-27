@@ -16,6 +16,7 @@ var TOPICS = {
 };
 var FIXED = { c3a: 1, c3c: 1, c3d: 1, c4c: 1, c4d: 1, c4e: 1, c5d: 1 };
 var YESNO = { c4c: 1, c4d: 1 };
+var FREQ3 = { c3a: 1, c3c: 1, c3d: 1 };
 var SHEET = 'Responses';
 var SHEET_ID = '1BEWXV9MhyCAvf2Z5hAN_ZdPAcw2rgsSYvH75pMt7NK4';
 function ss_() { return SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById(SHEET_ID); }
@@ -117,6 +118,7 @@ function doPost(e) {
       var v = Number(d.ratings && d.ratings[items[j]]);
       if (!(v >= 1 && v <= 5 && v === Math.round(v))) return json_({ ok: false, error: 'Missing or invalid rating.' });
       if (YESNO[items[j]] && v !== 1 && v !== 5) return json_({ ok: false, error: 'Invalid yes/no answer.' });
+      if (FREQ3[items[j]] && v !== 1 && v !== 3 && v !== 5) return json_({ ok: false, error: 'Invalid how-often answer.' });
       vals.push(v);
     }
     Object.keys(ITEMS).forEach(function (c) {

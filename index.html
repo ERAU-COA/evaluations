@@ -196,7 +196,7 @@
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxAWVroYfVEm0C3ESjLahaiW6oNMDF9mqqL40JlNszsw5vRTlURuoVqiOjFPqE6av6F/exec";
 const COURSE = "MSA 641";
-const LAYOUT_VERSION = 3;
+const LAYOUT_VERSION = 4;
 
 const TEAMS = [
   { id: "G1", names: "Gordon & Romane",   topic: "Aircraft Cannibalization as an Inventory & Procurement Strategy" },
@@ -247,7 +247,7 @@ const LABELS = ["Very poor", "Needs improvement", "Fair", "Good", "Excellent"];
 const GRADES = ["F", "D", "C", "B", "A"];
 const AGREE = ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"];
 const COVER = ["None", "A few", "About half", "Most", "All"];
-const FREQ = ["Never", "Rarely", "Sometimes", "Usually", "Always"];
+const FREQ3 = [[5, "Usually"], [3, "Sometimes"], [1, "Rarely"]];
 const BALANCE = ["One person did all of it", "Mostly one person", "Somewhat uneven", "Nearly even", "Evenly shared"];
 const STYLES = {
   num:     { hint: "1 = very poor, 5 = excellent" },
@@ -406,7 +406,7 @@ function buildWidget(type, qid, current, onPick) {
   if (type === "words") { box.className = "list"; down.forEach(v => add(v, LABELS[v - 1])); }
   if (type === "yesno" || type === "yesall") { box.className = "yesno"; add(5, "Yes"); add(1, "No"); }
   if (type === "cover") { box.className = "list"; down.forEach(v => add(v, COVER[v - 1])); add(5, "No images used"); }
-  if (type === "freq") { box.className = "list"; down.forEach(v => add(v, FREQ[v - 1])); }
+  if (type === "freq") { box.className = "list"; FREQ3.forEach(([v, t]) => add(v, t)); }
   if (type === "balance") { box.className = "list"; down.forEach(v => add(v, BALANCE[v - 1])); }
   const fills = type === "stars" || type === "bars";
   let picked = null;
