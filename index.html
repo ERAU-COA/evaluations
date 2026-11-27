@@ -54,7 +54,9 @@
   .bar .inner { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 10px; padding-bottom: 8px; }
   .bar .t { flex: 1; min-width: 0; }
   .bar .t b { display: block; font-size: 21px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .bar .t span { display: block; font-size: 18px; opacity: .9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dots { display: flex; gap: 8px; margin-top: 6px; }
+  .dots button { width: 22px; height: 22px; padding: 0; border-radius: 50%; border: 2px solid rgba(255,255,255,.75); background: transparent; }
+  .dots button.on { background: #fff; border-color: #fff; }
   .bar .score { text-align: right; flex: none; }
   .bar .score b { font-size: 28px; }
   .bar .score span { display: block; font-size: 16px; opacity: .9; }
@@ -125,7 +127,7 @@
 <section id="s-form">
   <div class="bar">
     <div class="inner">
-      <div class="t"><b>Peer evaluation</b><span id="tcount"></span></div>
+      <div class="t"><b>Peer evaluation</b><div class="dots" id="dots" aria-label="Sections finished"></div></div>
       <div class="score"><b id="total">&ndash;</b><span>of 100</span></div>
     </div>
     <div class="prog"><i id="progbar"></i></div>
@@ -146,6 +148,7 @@
   <div class="wrap thanks">
     <div class="big" id="dscore"></div>
     <h2 id="h-done" tabindex="-1">Submitted. Thank you!</h2>
+    <p class="note" id="davg"></p>
     <p class="note" id="dwhen"></p>
     <button class="submit" id="again" type="button">Evaluate another presentation</button>
   </div>
@@ -445,10 +448,13 @@ function renderForm() {
       it.appendChild(q);
       const cur = isAttn ? (attnVal ? { v: attnVal } : null) : (ratings[key] ? { v: ratings[key], label: (comments._cover || {})[key] } : null);
       it.appendChild(buildWidget(type, "q-" + key, cur, (v, label) => {
+        const wasNew = isAttn ? !attnVal : !ratings[key];
         if (isAttn) attnVal = v; else ratings[key] = v;
+        if (navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} }
         if (label) comments._cover = Object.assign({}, comments._cover, { [key]: label });
         lastAt = Date.now(); if (!firstAt) firstAt = lastAt;
         it.classList.remove("missing"); saveDraft(); update();
+        if (wasNew) setTimeout(() => goNext(it), 280);
       }));
       card.appendChild(it);
     });
@@ -467,6 +473,15 @@ function renderForm() {
   update();
 }
 
+function motion() { try { return matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"; } catch (e) { return "smooth"; } }
+function goNext(from) {
+  const all = Array.from(document.querySelectorAll("#crits .item"));
+  const open = el => { const k = el.id.slice(3); return k === "attn" ? !attnVal : !ratings[k]; };
+  const nx = all.slice(all.indexOf(from) + 1).find(open);
+  if (nx) nx.scrollIntoView({ behavior: motion(), block: "center" });
+  else if (!all.some(open)) $("submit").scrollIntoView({ behavior: motion(), block: "center" });
+}
+
 function scores() {
   const per = {}; let total = 0, complete = true;
   CRITERIA.forEach(c => {
@@ -480,7 +495,17 @@ function scores() {
 
 function update() {
   const n = ALL_ITEMS.filter(k => ratings[k]).length + (attnVal ? 1 : 0), N = ALL_ITEMS.length + 1;
-  $("tcount").textContent = n + "/" + N + " answered";
+  const dots = $("dots");
+  if (dots.children.length !== CRITERIA.length) {
+    dots.innerHTML = "";
+    CRITERIA.forEach((c, i) => { const b = document.createElement("button"); b.type = "button";
+      b.onclick = () => $("card-" + c.id).scrollIntoView({ behavior: motion(), block: "start" }); dots.appendChild(b); });
+  }
+  CRITERIA.forEach((c, i) => {
+    const fin = c.items.every(it => ratings[it[0]]) && (layout.attn.crit !== c.id || attnVal);
+    const b = dots.children[i]; b.classList.toggle("on", !!fin);
+    b.setAttribute("aria-label", "Section " + (i + 1) + (fin ? ", finished" : ", not finished"));
+  });
   $("progbar").style.width = (100 * n / N) + "%";
   const s = scores();
   $("total").textContent = s.complete ? s.total.toFixed(1) : "–";
@@ -568,13 +593,14 @@ async function send(st) {
     if (!r.ok) throw new TypeError("HTTP " + r.status);
     return r.json();
   };
+  let avg = null;
   try {
     let ok = false;
     try {
       let j = await post();
       if (j && !j.ok && /lock/i.test(j.error || "")) { await new Promise(r => setTimeout(r, 2000)); j = await post(); }
       if (!j || !j.ok) { $("err").textContent = "Could not send: " + ((j && j.error) || "server error") + " Your answers are saved on this phone."; return; }
-      ok = true;
+      ok = true; if (j.classN > 0) avg = j;
     } catch (e) {
       if (!(e instanceof TypeError)) throw e;
       await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
@@ -586,6 +612,7 @@ async function send(st) {
       store.del(DRAFT);
       const ck = "msa641_count_" + now.toDateString(), n = (Number(store.get(ck)) || 0) + 1; store.set(ck, n);
       $("dscore").textContent = s.total.toFixed(1) + " / 100";
+      $("davg").textContent = avg ? "Class average so far: " + Number(avg.classAvg).toFixed(1) + " (" + avg.classN + (avg.classN === 1 ? " rating)" : " ratings)") : "";
       $("dwhen").textContent = fmtNow(now) + " · Evaluation " + n + " from this phone today";
       show("s-done"); $("h-done").focus();
     }
