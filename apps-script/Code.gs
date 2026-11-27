@@ -39,38 +39,42 @@ function setup() {
   var ss = ss_();
   var sh = ss.getSheetByName(SHEET) || ss.insertSheet(SHEET);
   var h = headers_();
+  if (sh.getMaxColumns() < h.length) sh.insertColumnsAfter(sh.getMaxColumns(), h.length - sh.getMaxColumns());
   sh.getRange(1, 1, 1, sh.getMaxColumns()).clearContent();
   sh.getRange(1, 1, 1, h.length).setValues([h]).setFontWeight('bold');
   sh.setFrozenRows(1);
   sh.getRange(2, 1, sh.getMaxRows() - 1, h.length).clearDataValidations();
+  sh.getRange(2, h.indexOf('Presentation') + 1, sh.getMaxRows() - 1, 1).setDataValidation(
+    SpreadsheetApp.newDataValidation().requireNumberGreaterThan(0).setAllowInvalid(false).setHelpText('Presentation must be a number.').build());
 
   var sum = ss.getSheetByName('Summary') || ss.insertSheet('Summary');
   sum.clear();
   var L = function (name) { return colLetter_(h.indexOf(name) + 1); };
   var R = function (name) { return SHEET + '!' + L(name) + ':' + L(name); };
   var pr = R('Presentation'), tot = R('Total (100)'), fl = R('Straight-line flag'), du = R('Duplicate flag');
-  var at = R('Attention check'), names = R('Presenters');
+  var at = R('Attention check'), names = R('Presenters'), dt = R('Date');
   var P = L('Presentation'), T = L('Total (100)'), D = L('Device token'), O = L('Offset from presentation mean');
   sum.getRange(1, 1).setFormula('=QUERY(' + SHEET + '!A:' + O + ',"select ' + P + ', count(' + T + '), avg(' + T + '), min(' + T + '), max(' + T +
     ') where ' + P + ' is not null group by ' + P + ' order by ' + P + ' label ' + P + ' \'Presentation\', count(' + T + ') \'Evaluations\', avg(' + T +
     ') \'Mean total\', min(' + T + ') \'Min\', max(' + T + ') \'Max\' format avg(' + T + ') \'0.0\'",1)');
-  sum.getRange(1, 6, 1, 3).setValues([['Mean total (clean)', 'Flagged rows', 'Presenters']]);
+  sum.getRange(1, 6, 1, 4).setValues([['Mean total (clean)', 'Flagged rows', 'Presenters', 'Date']]);
   var f = [];
-  for (var r = 2; r <= 41; r++) {
+  for (var r = 2; r <= 301; r++) {
     f.push(['=IF(A' + r + '="","",IFERROR(ROUND(AVERAGEIFS(' + tot + ',' + pr + ',A' + r + ',' + fl + ',"",' + du + ',"",' + at + ',"<>FAIL"),1),""))',
             '=IF(A' + r + '="","",B' + r + '-COUNTIFS(' + pr + ',A' + r + ',' + fl + ',"",' + du + ',"",' + at + ',"<>FAIL"))',
-            '=IF(A' + r + '="","",IFERROR(INDEX(FILTER(' + names + ',' + pr + '=A' + r + ',' + names + '<>""),1),""))']);
+            '=IF(A' + r + '="","",IFERROR(INDEX(FILTER(' + names + ',' + pr + '=A' + r + ',' + names + '<>""),1),""))',
+            '=IF(A' + r + '="","",IFERROR(TEXT(INDEX(FILTER(' + dt + ',' + pr + '=A' + r + '),1),"yyyy-mm-dd"),""))']);
   }
-  sum.getRange(2, 6, f.length, 3).setFormulas(f);
-  sum.getRange(1, 10).setFormula('=QUERY(' + SHEET + '!A:' + O + ',"select ' + D + ', count(' + T + '), avg(' + O + ') where ' + D +
-    ' is not null and ' + O + ' is not null group by ' + D + ' order by avg(' + O + ') desc label ' + D + ' \'Phone (device token)\', count(' + T +
-    ') \'Evaluations\', avg(' + O + ') \'Leniency (avg points above class)\' format avg(' + O + ') \'0.0\'",1)');
-  sum.getRange(1, 1, 1, 12).setFontWeight('bold');
-  sum.getRange(44, 1, 4, 1).setValues([
-    ['Rows are grouped into presentations automatically. A new number starts after a ' + GAP_MIN + '-minute pause in submissions, or when a phone that already rated the current presentation submits again at least ' + REPEAT_MIN + ' minutes later.'],
-    ['To move a row, change its number in the Presentation column of Responses. Type the presenters’ names in the Presenters column of any one row.'],
+  sum.getRange(2, 6, f.length, 4).setFormulas(f);
+  sum.getRange(1, 11).setFormula('=IFERROR(QUERY(QUERY(' + SHEET + '!A:' + O + ',"select ' + D + ', count(' + O + '), avg(' + O + ') where ' + D +
+    ' is not null and ' + O + ' is not null group by ' + D + ' label ' + D + ' \'Phone (device token)\', count(' + O +
+    ') \'Evaluations\', avg(' + O + ') \'Leniency (avg points above class)\'",1),"select * where Col2 >= 3 order by Col3 desc format Col3 \'0.0\'",1),"Leniency appears once a phone has 3 clean ratings.")');
+  sum.getRange(1, 1, 1, 13).setFontWeight('bold');
+  sum.getRange(304, 1, 4, 1).setValues([
+    ['Rows are grouped into presentations automatically. A new number starts on a new day, after a ' + GAP_MIN + '-minute pause in submissions, or when a phone that already rated the current presentation submits again at least ' + REPEAT_MIN + ' minutes later.'],
+    ['To move a row, change its number in the Presentation column of Responses (numbers only). Type the presenters’ names in the Presenters column of any one row.'],
     ['Mean total (clean) leaves out straight-line, duplicate and failed-attention-check submissions.'],
-    ['Leniency: how many points a phone gives above (+) or below (-) the class mean for the same presentation, averaged over its ratings.']]);
+    ['Leniency: how many points a phone gives above (+) or below (-) the other clean ratings of the same presentation, averaged over its clean ratings; shown from 3 ratings.']]);
 }
 
 function colLetter_(n) {
@@ -110,7 +114,7 @@ function doPost(e) {
 
     var subCol = h.indexOf('Submission ID') + 1, devCol = h.indexOf('Device token') + 1;
     var last = sh.getLastRow();
-    var nowMs = Date.now(), prevMs = 0, pres = 1, ps = [], tots = [], atts = [];
+    var nowMs = Date.now(), prevMs = 0, pres = 1, ps = [], tots = [], atts = [], fls = [];
     var presC = h.indexOf('Presentation') + 1;
     if (last > 1) {
       var subs = sh.getRange(2, subCol, last - 1, 1).getValues();
@@ -120,20 +124,31 @@ function doPost(e) {
       ps = sh.getRange(2, presC, last - 1, 1).getValues();
       tots = sh.getRange(2, h.indexOf('Total (100)') + 1, last - 1, 1).getValues();
       atts = sh.getRange(2, h.indexOf('Attention check') + 1, last - 1, 1).getValues();
-      var maxP = 0, lastP = Number(ps[ps.length - 1][0]) || 0, lastEp = Number(eps[eps.length - 1][0]) || 0, seen = 0;
-      for (var k = 0; k < devs.length; k++) {
-        var ek = Number(eps[k][0]), pk = Number(ps[k][0]) || 0;
+      fls = sh.getRange(2, h.indexOf('Straight-line flag') + 1, last - 1, 1).getValues();
+      var maxP = 0, lastP = 0, lastEp = 0, seen = 0, k, ek, pk;
+      for (k = 0; k < eps.length; k++) {
+        ek = Number(eps[k][0]) || 0; pk = Number(ps[k][0]) || 0;
         if (pk > maxP) maxP = pk;
+        if (pk && ek >= lastEp) { lastEp = ek; lastP = pk; }
+      }
+      for (k = 0; k < devs.length; k++) {
+        ek = Number(eps[k][0]) || 0; pk = Number(ps[k][0]) || 0;
         if (String(devs[k][0]) === clean_(d.device)) {
           if (ek > prevMs) prevMs = ek;
           if (lastP && pk === lastP && ek > seen) seen = ek;
         }
       }
-      pres = (!lastP || nowMs - lastEp > GAP_MIN * 60000 || (seen && nowMs - seen >= REPEAT_MIN * 60000)) ? maxP + 1 : lastP;
+      var day = function (ms) { return Utilities.formatDate(new Date(ms), Session.getScriptTimeZone(), 'yyyy-MM-dd'); };
+      var newDay = lastEp > 0 && day(lastEp) !== day(nowMs);
+      pres = (!lastP || newDay || nowMs - lastEp > GAP_MIN * 60000 || (seen && nowMs - seen >= REPEAT_MIN * 60000)) ? maxP + 1 : lastP;
     }
     var r = last + 1, presL = colLetter_(presC), devL = colLetter_(devCol), totL = colLetter_(h.indexOf('Total (100)') + 1);
-    var dup = '=IF(' + presL + r + '="","",IF(COUNTIFS(' + presL + ':' + presL + ',' + presL + r + ',' + devL + ':' + devL + ',' + devL + r + ')>1,"YES",""))';
-    var offset = '=IF(OR(' + presL + r + '="",' + totL + r + '=""),"",ROUND(' + totL + r + '-AVERAGEIF(' + presL + ':' + presL + ',' + presL + r + ',' + totL + ':' + totL + '),1))';
+    var epL = colLetter_(h.indexOf('Submitted (epoch ms)') + 1), flL = colLetter_(h.indexOf('Straight-line flag') + 1);
+    var dpL = colLetter_(h.indexOf('Duplicate flag') + 1), atL = colLetter_(h.indexOf('Attention check') + 1);
+    var dup = '=IF(' + presL + r + '="","",IF(COUNTIFS(' + presL + ':' + presL + ',' + presL + r + ',' + devL + ':' + devL + ',' + devL + r + ',' + epL + ':' + epL + ',"<"&' + epL + r + ')>0,"YES",""))';
+    var crit_ = presL + ':' + presL + ',' + presL + r + ',' + flL + ':' + flL + ',"",' + dpL + ':' + dpL + ',"",' + atL + ':' + atL + ',"<>FAIL"';
+    var mine = 'AND(' + flL + r + '="",' + dpL + r + '="",' + atL + r + '<>"FAIL")';
+    var offset = '=IF(OR(' + presL + r + '="",' + totL + r + '="",NOT(' + mine + ')),"",IFERROR(ROUND(' + totL + r + '-(SUMIFS(' + totL + ':' + totL + ',' + crit_ + ')-' + totL + r + ')/(COUNTIFS(' + crit_ + ')-1),1),""))';
     var hm = function (ms) { ms = Number(ms); return ms > 0 ? Utilities.formatDate(new Date(ms), Session.getScriptTimeZone(), 'HH:mm:ss') : ''; };
 
     var items = allItems_(), vals = [], crit = {}, total = 0;
@@ -169,9 +184,9 @@ function doPost(e) {
                clean_(d.localDisplay), clean_(d.tz), pres, '', '']
       .concat(vals)
       .concat([crit.c1, crit.c2, crit.c3, crit.c4, crit.c5, crit.c6, total])
-      .concat([c.c1, c.c2, c.c3, c.c4, c.c5, c.c6, c.overall].map(clean_))
+      .concat([c.c1, c.c2, c.c3, c.c4, c.c5, c.c6, c.overall].map(text_))
       .concat([Number(d.durationSec) || '', Math.round(sd * 1000) / 1000, distinct, Number(d.flatCriteria) || 0, flat,
-               clean_(d.flatReason), fast, dup, clean_(d.device), clean_(d.subId), clean_(order),
+               text_(d.flatReason), fast, dup, clean_(d.device), clean_(d.subId), clean_(order),
                attnRes, Number(a.value) ? (Number(a.value) + ' (asked ' + Number(a.target) + ', ' + clean_(a.style) + ')') : '',
                clean_(d.styles), clean_(d.localTime),
                clean_(fp.id), clean_(fp.model), clean_(fp.ua),
@@ -179,14 +194,20 @@ function doPost(e) {
                clean_(JSON.stringify(fp)),
                hm(d.firstAt), hm(d.lastAt), prevMs ? Math.round((nowMs - prevMs) / 6000) / 10 : '', nowMs, offset]);
     sh.appendRow(row);
-    var sumT = attnRes === 'FAIL' ? 0 : total, n = attnRes === 'FAIL' ? 0 : 1;
-    for (var q = 0; q < ps.length; q++) if (Number(ps[q][0]) === pres && atts[q][0] !== 'FAIL' && tots[q][0] !== '') { sumT += Number(tots[q][0]); n++; }
+    var okMe = attnRes !== 'FAIL' && !flat;
+    var sumT = okMe ? total : 0, n = okMe ? 1 : 0;
+    for (var q = 0; q < ps.length; q++) if (Number(ps[q][0]) === pres && atts[q][0] !== 'FAIL' && fls[q][0] !== 'YES' && tots[q][0] !== '') { sumT += Number(tots[q][0]); n++; }
     return json_({ ok: true, total: total, presentation: pres, classN: n, classAvg: n ? Math.round(sumT / n * 10) / 10 : null });
   } catch (err) {
     return json_({ ok: false, error: String(err) });
   } finally {
     lock.releaseLock();
   }
+}
+
+function text_(s) {
+  s = String(s || '').slice(0, 2000);
+  return s ? "'" + s : '';
 }
 
 function clean_(s) {
