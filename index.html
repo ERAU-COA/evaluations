@@ -97,6 +97,10 @@
   .bars button i { display: block; width: 100%; border-radius: 6px 6px 2px 2px; background: var(--bar); }
   .bars button.on i { background: var(--sel); }
   .list { display: grid; gap: 8px; }
+  .yesno { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .yesno button { border: 1.5px solid var(--line); background: var(--btn); color: var(--text); border-radius: 12px;
+    font: inherit; font-size: 20px; font-weight: 700; min-height: 58px; }
+  .yesno button.on { background: var(--sel); border-color: var(--sel); color: #fff; }
   .list button { text-align: left; border: 1.5px solid var(--line); background: var(--btn); color: var(--text);
     border-radius: 10px; padding: 12px 16px; font: inherit; font-size: 18px; min-height: 52px; }
   .list button.on { background: var(--sel); border-color: var(--sel); color: #fff; font-weight: 600; }
@@ -214,7 +218,7 @@ const CRITERIA = [
     ["c4b", "Slides illustrate the key concepts clearly"],
     ["c4c", "Slides cover intro, overview, issue brief and conclusions"],
     ["c4d", "Includes an APA-formatted reference slide"],
-    ["c4e", "Every image has an attribution beneath it"] ] },
+    ["c4e", "Images have an attribution beneath them"] ] },
   { id: "c5", title: "Shared defense & time management", tag: "Team Q&A", w: 10, items: [
     ["c5a", "Handles audience questions effectively"],
     ["c5b", "Answers are cohesive and build on each other"],
@@ -279,6 +283,7 @@ function openTeam(t, idx) {
   startedAt = (draft && draft.startedAt) || Date.now();
   attnVal = (draft && draft.attnVal) || null;
   layout = (draft && draft.layout) || makeLayout();
+  YESNO.forEach(k => layout.types[k] = "yesno"); layout.types.c4e = "cover";
   orderLog = {}; flatReason = "";
   $("tname").textContent = "Group " + team.n + ": " + t.names;
   $("err").textContent = "";
@@ -299,6 +304,10 @@ const STYLES = {
   words: { hint: "Which word fits best?" }
 };
 const STYLE_KEYS = Object.keys(STYLES);
+const YESNO = ["c4c", "c4d"];
+STYLES.yesno = { hint: "Yes or no" };
+STYLES.cover = { hint: "How many images have one?" };
+const COVER = ["None", "A few", "About half", "Most", "All"];
 
 function labelFor(type, v) {
   return { num: "“" + v + "”", rev: "“" + v + "”", grade: "the letter “" + GRADES[v - 1] + "”",
@@ -344,6 +353,8 @@ function buildWidget(type, current, onPick) {
   if (type === "bars") { box.className = "bars"; vals.forEach(v => add(v, `<i style="height:${14 + v * 11}px"></i>`)); }
   if (type === "agree") { box.className = "list"; vals.forEach(v => add(v, AGREE[v - 1])); }
   if (type === "words") { box.className = "list"; vals.slice().reverse().forEach(v => add(v, WORDS[v - 1])); }
+  if (type === "yesno") { box.className = "yesno"; add(5, "Yes"); add(1, "No"); }
+  if (type === "cover") { box.className = "list"; vals.slice().reverse().forEach(v => add(v, COVER[v - 1])); }
   const fills = type === "stars" || type === "bars";
   function paint(v) {
     btns.forEach(b => { const bv = +b.dataset.v; b.classList.toggle("on", fills ? bv <= v : bv === v); });
