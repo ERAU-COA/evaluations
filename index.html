@@ -16,11 +16,11 @@
     --text: #1b1f24;
     --muted: #4d5560;
     --line: #d9dee5;
-    --edge: #9aa4b0;
+    --edge: #8a94a0;
     --sel: #0b2a4a;
     --warn: #b42318;
     --ok: #1a7f37;
-    --bar: #8b95a1;
+    --bar: #7a8491;
     --star: #b7791f;
     --btn: #ffffff;
     --sep: rgba(0,0,0,.10);
@@ -29,7 +29,7 @@
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #0f1419; --card: #1a2027; --text: #e8ebef; --muted: #a9b2bd;
-      --line: #2f3843; --edge: #5a6573; --sel: #2f6fd6; --accent: #6ea2ff; --bar: #5a6573; --star: #f0b429;
+      --line: #2f3843; --edge: #5a6573; --sel: #2f6fd6; --accent: #6ea2ff; --bar: #6b7684; --star: #f0b429;
       --warn: #ff7b72; --ok: #3fb950;
       --btn: #11161b; --sep: rgba(255,255,255,.10);
       --t1: #172233; --t2: #15261d; --t3: #2a2216; --t4: #211b31; --t5: #13272a; --t6: #2c1920;
@@ -38,9 +38,9 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   html, body { margin: 0; background: var(--bg); color: var(--text);
-    font: 20px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    font: 21px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
   body { padding-bottom: env(safe-area-inset-bottom); }
-  body.lock { overflow: hidden; }
+  body.lock { position: fixed; left: 0; right: 0; overflow: hidden; }
   button { cursor: pointer; }
   button:active { filter: brightness(.92); }
   button:focus-visible, textarea:focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }
@@ -49,17 +49,17 @@
   header.top { background: var(--navy); color: #fff; padding: 18px 14px 16px;
     padding-top: calc(18px + env(safe-area-inset-top)); }
   header.top .inner { max-width: 640px; margin: 0 auto; }
-  header.top h1 { font-size: 27px; margin: 0 0 4px; line-height: 1.2; }
-  header.top .sub { font-size: 18px; opacity: .9; }
-  .when { font-size: 18px; opacity: .9; margin-top: 6px; }
-  h2 { font-size: 24px; margin: 22px 2px 10px; }
-  .note { color: var(--muted); font-size: 19px; margin: 8px 2px 14px; }
-  .pickmsg { color: var(--ok); font-weight: 600; font-size: 19px; margin: 0 2px 12px; }
+  header.top h1 { font-size: 29px; margin: 0 0 4px; line-height: 1.2; }
+  header.top .sub { font-size: 19px; opacity: .9; }
+  .when { font-size: 19px; opacity: .9; margin-top: 6px; }
+  h2 { font-size: 26px; margin: 22px 2px 10px; }
+  .note { color: var(--muted); font-size: 20px; margin: 8px 2px 14px; }
+  .pickmsg { color: var(--ok); font-weight: 600; font-size: 20px; margin: 0 2px 12px; }
   .team { display: block; width: 100%; text-align: left; background: var(--card); color: var(--text);
     border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin: 0 0 12px; font: inherit; }
-  .team .g { font-size: 16px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .04em; }
-  .team .names { font-weight: 700; font-size: 25px; margin: 2px 0 4px; }
-  .team .topic { color: var(--muted); font-size: 19px; }
+  .team .g { font-size: 17px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .04em; }
+  .team .names { font-weight: 700; font-size: 27px; margin: 2px 0 4px; }
+  .team .topic { color: var(--muted); font-size: 20px; }
   .team.done { border: 2px solid var(--ok); }
   .team .badge { float: right; font-size: 16px; font-weight: 700; color: var(--ok); }
 
@@ -69,8 +69,8 @@
   .bar .back { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.5);
     border-radius: 10px; font: inherit; font-size: 28px; line-height: 1; width: 46px; height: 46px; flex: none; }
   .bar .t { flex: 1; min-width: 0; }
-  .bar .t b { display: block; font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .bar .t span { font-size: 17px; opacity: .9; white-space: nowrap; }
+  .bar .t b { display: block; font-size: 21px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar .t span { display: block; font-size: 18px; opacity: .9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .bar .score { text-align: right; flex: none; }
   .bar .score b { font-size: 28px; }
   .bar .score span { display: block; font-size: 16px; opacity: .9; }
@@ -81,51 +81,52 @@
   .crit.c1 { background: var(--t1); } .crit.c2 { background: var(--t2); } .crit.c3 { background: var(--t3); }
   .crit.c4 { background: var(--t4); } .crit.c5 { background: var(--t5); } .crit.c6 { background: var(--t6); }
   .crit.tint { border-color: transparent; }
-  .crit h3 { font-size: 26px; margin: 0 0 2px; line-height: 1.2; }
-  .crit .w { font-size: 18px; color: var(--muted); margin-bottom: 10px; }
-  .crit .cs { float: right; font-size: 19px; font-weight: 700; color: var(--accent); }
-  .item { padding: 14px 0 12px; border-top: 1px solid var(--sep); scroll-margin-top: 110px; }
-  .item .q { font-size: 24px; font-weight: 600; line-height: 1.3; margin-bottom: 8px; }
+  .crit h3 { font-size: 28px; margin: 0 0 2px; line-height: 1.2; }
+  .crit .w { font-size: 19px; color: var(--muted); margin-bottom: 10px; }
+  .crit .cs { display: block; font-size: 20px; font-weight: 700; color: var(--accent); }
+  .item { padding: 12px 0 10px; border-top: 1px solid var(--sep); scroll-margin-top: 110px; }
+  .item .q { font-size: 26px; font-weight: 600; line-height: 1.3; margin-bottom: 8px; }
   .item.missing { border-left: 5px solid var(--warn); padding-left: 10px; }
   .item.missing .q { color: var(--warn); }
-  .item.missing .q::after { content: " (needs an answer)"; font-weight: 400; font-size: 19px; }
-  .hint { font-size: 18px; color: var(--muted); margin: 0 0 10px; font-style: italic; }
-  .cap { font-size: 18px; color: var(--accent); font-weight: 600; min-height: 24px; margin-top: 6px; }
+  .item.missing .q::after { content: " (needs an answer)"; font-weight: 400; font-size: 20px; }
+  .hint { font-size: 19px; color: var(--muted); margin: 0 0 7px; font-style: italic; }
+  .cap { font-size: 19px; color: var(--accent); font-weight: 600; min-height: 24px; margin-top: 6px; }
   .scale { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
   .scale button, .yesno button, .list button { border: 2px solid var(--edge); background: var(--btn); color: var(--text); font: inherit; }
-  .scale button { border-radius: 12px; min-height: 62px; padding: 0; }
-  .scale button b { font-size: 28px; line-height: 1; }
-  .scale.grade button b { font-size: 30px; }
+  .scale button { border-radius: 12px; min-height: 64px; padding: 0; }
+  .scale button b { font-size: 30px; line-height: 1; }
+  .scale.grade button b { font-size: 32px; }
   .scale button.on, .yesno button.on, .list button.on { background: var(--sel); border-color: var(--sel); color: #fff; }
   .stars { display: flex; gap: 4px; }
-  .stars button { flex: 1; border: none; background: none; font-size: 54px; line-height: 1; padding: 4px 0;
+  .stars button { flex: 1; min-width: 0; border: none; background: none; font-size: clamp(40px, 13.5vw, 54px); line-height: 1; padding: 4px 0;
     color: var(--bar); font-family: inherit; }
   .stars button.on { color: var(--star); }
   .bars { display: flex; gap: 10px; align-items: flex-end; height: 90px; }
   .bars button { flex: 1; height: 100%; border: none; background: none; padding: 0; display: flex; align-items: flex-end; }
   .bars button i { display: block; width: 100%; border-radius: 6px 6px 2px 2px; background: var(--bar); }
   .bars button.on i { background: var(--sel); }
-  .list { display: grid; gap: 6px; }
-  .list button { text-align: left; border-radius: 12px; padding: 10px 16px; font-size: 21px; min-height: 54px; }
-  .list button.on { font-weight: 600; }
+  .list { display: grid; gap: 5px; }
+  .list button { text-align: left; border-radius: 12px; padding: 8px 14px; font-size: 22px; min-height: 52px; }
+  .list button.on { font-weight: 400; }
   .yesno { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .yesno button { border-radius: 12px; font-size: 24px; font-weight: 700; min-height: 64px; }
-  .addc { background: none; border: none; color: var(--accent); font: inherit; font-size: 20px; padding: 10px 0; }
+  .yesno button { border-radius: 12px; font-size: 25px; font-weight: 700; min-height: 64px; }
+  .addc { background: none; border: none; color: var(--accent); font: inherit; font-size: 21px; padding: 10px 0; }
   textarea { width: 100%; min-height: 96px; border: 2px solid var(--edge); border-radius: 12px; padding: 10px;
-    font: inherit; font-size: 20px; background: var(--btn); color: var(--text); resize: vertical; margin: 4px 0 10px; }
-  .opt { font-weight: 400; color: var(--muted); font-size: 19px; }
+    font: inherit; font-size: 21px; background: var(--btn); color: var(--text); resize: vertical; margin: 4px 0 10px; }
+  .opt { font-weight: 400; color: var(--muted); font-size: 20px; }
   .submit { display: block; width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 14px;
-    padding: 20px; font: inherit; font-size: 23px; font-weight: 700; margin-top: 18px; }
+    padding: 20px; font: inherit; font-size: 24px; font-weight: 700; margin-top: 18px; }
   .submit:disabled { opacity: .6; }
-  .err { color: var(--warn); font-size: 19px; margin: 10px 2px; min-height: 1em; }
+  .err { color: var(--warn); font-size: 20px; margin: 10px 2px; min-height: 1em; }
   .hidden { display: none !important; }
 
   .modal { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 12px; }
   .sheet { background: var(--card); color: var(--text); width: 100%; max-width: 600px; border-radius: 18px;
     padding: 20px 16px; max-height: 90vh; max-height: 90dvh; overflow: auto; }
-  .sheet h3 { margin: 0 0 8px; font-size: 24px; }
-  .sheet p { margin: 0 0 10px; color: var(--muted); font-size: 19px; }
+  .sheet h3 { margin: 0 0 8px; font-size: 26px; }
+  .sheet p { margin: 0 0 10px; color: var(--muted); font-size: 20px; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+  @media (max-width: 480px) { .row2 { grid-template-columns: 1fr; } }
   .btn2 { border-radius: 12px; padding: 14px; font: inherit; font-weight: 700; border: 2px solid var(--edge); background: var(--btn); color: var(--text); }
   .btn2.pri { background: var(--accent); border-color: var(--accent); color: #fff; }
 
@@ -143,7 +144,7 @@
     <div class="when" id="now1"></div>
   </div></header>
   <div class="wrap">
-    <p class="note">Anonymous: no name or login. Each point is rated out of 5, and the answer format changes from point to point. Comments are optional.</p>
+    <p class="note">Anonymous: no name or login. The answer format changes from point to point. Comments are optional.</p>
     <h2>Which team are you evaluating?</h2>
     <div class="pickmsg hidden" id="pickmsg" role="status"></div>
     <div id="teams"></div>
@@ -182,10 +183,11 @@
 
 <div class="modal hidden" id="m-flat" role="dialog" aria-modal="true" aria-labelledby="h-flat">
   <div class="sheet">
-    <h3 id="h-flat">Every rating is the same</h3>
+    <h3 id="h-flat">Same answer throughout</h3>
     <p id="flatmsg"></p>
-    <p>Please review your ratings, or tell us in one sentence why every point deserves the same score.</p>
-    <textarea id="flatwhy" aria-labelledby="h-flat" placeholder="Reason (at least 15 characters)"></textarea>
+    <p>Please review your ratings, or give a one-sentence reason (at least 15 characters).</p>
+    <textarea id="flatwhy" aria-labelledby="h-flat" placeholder="Reason"></textarea>
+    <div class="err" id="flaterr" role="alert"></div>
     <div class="row2">
       <button class="btn2" id="flatreview" type="button">Review ratings</button>
       <button class="btn2 pri" id="flatok" type="button">Submit anyway</button>
@@ -219,7 +221,7 @@ const CRITERIA = [
     ["c2d", "Both presenters show consistent command of the material"],
     ["c2e", "The team presents a unified thesis with no contradictions or gaps"] ] },
   { id: "c3", title: "Technique of presentation", tag: "Coordinated delivery", w: 20, items: [
-    ["c3a", "The presenters maintain professional eye contact with the audience"],
+    ["c3a", "The presenters make professional eye contact with the audience"],
     ["c3b", "The presenters speak with an energetic, forceful voice"],
     ["c3c", "The presenters deliver extemporaneously, without reading slides or notes"],
     ["c3d", "The presenters stay attentive and respectful toward each other"],
@@ -228,11 +230,11 @@ const CRITERIA = [
     ["c4a", "Slides are legible, professional and consistent in design"],
     ["c4b", "Slides illustrate the key concepts clearly"],
     ["c4c", "Slides include all required sections: intro, overview, issue brief and conclusions"],
-    ["c4d", "Slides include a reference slide in APA style"],
-    ["c4e", "Every image has an attribution beneath it"] ] },
+    ["c4d", "The deck includes an APA-style reference slide"],
+    ["c4e", "Images have attributions beneath them"] ] },
   { id: "c5", title: "Shared defense", tag: "Team Q&A", w: 10, items: [
     ["c5a", "The team handles Q&A and defends its work effectively"],
-    ["c5b", "Q&A answers are cohesive and build on each other"],
+    ["c5b", "The presenters’ answers are cohesive and build on each other"],
     ["c5c", "Both presenters show shared ownership of the topic"],
     ["c5d", "Both presenters share the floor equitably"] ] },
   { id: "c6", title: "Overall group instructional effectiveness", tag: "Unified impact", w: 20, items: [
@@ -247,21 +249,21 @@ const LABELS = ["Very poor", "Needs improvement", "Fair", "Good", "Excellent"];
 const GRADES = ["F", "D", "C", "B", "A"];
 const AGREE = ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"];
 const COVER = ["None", "A few", "About half", "Most", "All"];
-const FREQ3 = [[5, "Usually"], [3, "Sometimes"], [1, "Rarely"]];
-const BALANCE = ["One person did all of it", "Mostly one person", "Somewhat uneven", "Nearly even", "Evenly shared"];
+const FREQ3 = [[5, "Almost always"], [3, "Sometimes"], [1, "Rarely"]];
+const BALANCE = ["One person did all the talking", "Mostly one person", "Somewhat uneven", "Nearly even", "Evenly shared"];
 const STYLES = {
   num:     { hint: "1 = very poor, 5 = excellent" },
   rev:     { hint: "5 = excellent, 1 = very poor" },
-  grade:   { hint: "Give it a letter grade" },
+  grade:   { hint: "Letter grade, F to A" },
   stars:   { hint: "Tap the stars: 5 stars = excellent" },
   bars:    { hint: "Tap a bar: the taller, the better" },
   agree:   { hint: "How much do you agree?" },
-  words:   { hint: "Which word fits best?" },
+  words:   { hint: "Which label fits best?" },
   yesno:   { hint: "Yes or no" },
-  yesall:  { hint: "Yes only if all four are there" },
-  cover:   { hint: "How many images have one?" },
+  yesall:  { hint: "Yes only if all four sections appear" },
+  cover:   { hint: "How many images have an attribution?" },
   freq:    { hint: "How often?" },
-  balance: { hint: "How evenly was the floor shared?" }
+  balance: { hint: "How evenly do they share the floor?" }
 };
 const ROTATE = ["num", "rev", "grade", "stars", "bars", "agree", "words"];
 const FAMILY = { num: "n", rev: "n", yesall: "yesno" };
@@ -414,9 +416,9 @@ function buildWidget(type, qid, current, onPick) {
     btns.forEach((b, i) => {
       const bv = +b.dataset.v;
       const on = fills ? bv <= v : (el ? b === el : bv === v && (type !== "cover" || i === btns.findIndex(x => +x.dataset.v === v)));
-      b.classList.toggle("on", on); b.setAttribute("aria-checked", on ? "true" : "false");
+      b.classList.toggle("on", on); b.setAttribute("aria-checked", (fills ? bv === v : on) ? "true" : "false");
     });
-    cap.textContent = coded && v ? v + " of 5 · " + LABELS[v - 1] : "";
+    cap.textContent = coded && v ? v + "/5 · " + LABELS[v - 1] : "";
   }
   if (type === "cover") {
     btns.forEach(b => b.onclick = () => { const v = +b.dataset.v; paint(v, b); onPick(v, b.textContent); });
@@ -433,7 +435,7 @@ function renderForm() {
   const textOf = {}; CRITERIA.forEach(c => c.items.forEach(([k, t]) => textOf[k] = t));
   CRITERIA.forEach((c, ci) => {
     const card = document.createElement("div"); card.className = "crit tint " + c.id; card.id = "card-" + c.id;
-    card.innerHTML = `<span class="cs" id="cs-${c.id}"></span><h3>${ci + 1}. ${esc(c.title)}</h3><div class="w">${esc(c.tag)} · ${c.w} points</div>`;
+    card.innerHTML = `<h3>${ci + 1}. ${esc(c.title)}</h3><div class="w">${esc(c.tag)} · ${c.w} points</div><span class="cs" id="cs-${c.id}"></span>`;
     const keys = layout.order[c.id].slice(); orderLog[c.id] = keys.join(",");
     if (layout.attn.crit === c.id) keys.splice(Math.min(layout.attn.pos, keys.length), 0, "attn");
     keys.forEach(key => {
@@ -452,10 +454,10 @@ function renderForm() {
       card.appendChild(it);
     });
     const add = document.createElement("button"); add.type = "button"; add.className = "addc";
-    const ta = document.createElement("textarea"); ta.placeholder = "Optional comment on " + c.title.toLowerCase();
+    const ta = document.createElement("textarea"); ta.placeholder = "Optional comment on section " + (ci + 1);
     ta.setAttribute("aria-label", "Comment on " + c.title);
     ta.value = comments[c.id] || ""; ta.oninput = () => { comments[c.id] = ta.value; saveDraft(); };
-    add.textContent = "+ Add a comment (optional)";
+    add.textContent = "+ Comment (optional)";
     add.onclick = () => { ta.classList.remove("hidden"); add.classList.add("hidden"); ta.focus(); };
     if (ta.value) add.classList.add("hidden"); else ta.classList.add("hidden");
     card.appendChild(add); card.appendChild(ta);
@@ -471,7 +473,7 @@ function scores() {
   CRITERIA.forEach(c => {
     const vals = c.items.map(i => ratings[i[0]]).filter(Boolean);
     if (vals.length < c.items.length) complete = false;
-    const s = vals.length ? c.w * (vals.reduce((a, b) => a + b, 0) / vals.length) / 5 : null;
+    const s = vals.length ? c.w * (vals.reduce((a, b) => a + (b - 1), 0) / vals.length) / 4 : null;
     per[c.id] = s; if (s != null) total += s;
   });
   return { per, total: Math.round(total * 10) / 10, complete };
@@ -497,26 +499,30 @@ function stats() {
   const distinct = new Set(v).size;
   const flatCrit = CRITERIA.filter(c => {
     const r = c.items.map(i => i[0]).filter(k => !FIXED[k]);
-    return r.length > 1 && new Set(r.map(k => ratings[k])).size === 1;
+    return r.length > 2 && new Set(r.map(k => ratings[k])).size === 1;
   }).length;
   return { sd: Math.round(sd * 1000) / 1000, distinct, flatCrit };
 }
 
-function openModal() { $("m-flat").classList.remove("hidden"); document.body.classList.add("lock"); setTimeout(() => $("flatwhy").focus(), 50); }
-function closeModal() { $("m-flat").classList.add("hidden"); document.body.classList.remove("lock"); }
+let lockY = 0;
+function openModal() { lockY = window.scrollY; document.body.style.top = -lockY + "px"; document.body.classList.add("lock");
+  $("m-flat").classList.remove("hidden"); setTimeout(() => $("flatwhy").focus(), 50); }
+function closeModal() { $("m-flat").classList.add("hidden"); document.body.classList.remove("lock"); document.body.style.top = "";
+  window.scrollTo(0, lockY); $("submit").focus(); }
 
 $("submit").onclick = () => {
   const missing = ALL_ITEMS.filter(k => !ratings[k]).concat(attnVal ? [] : ["attn"]);
   if (missing.length) {
     missing.forEach(k => { const el = $("it-" + k); if (el) el.classList.add("missing"); });
     $("err").textContent = missing.length + (missing.length === 1 ? " point still needs" : " points still need") + " an answer.";
-    const first = $("it-" + missing[0]); if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+    const first = document.querySelector(".item.missing"); if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
     return;
   }
   const st = stats();
+  if (st.distinct !== 1) flatReason = "";
   if (st.distinct === 1 && !flatReason) {
-    $("flatmsg").textContent = "You gave all " + ROT_ITEMS.length + " rated points a " + ratings[ROT_ITEMS[0]] + " out of 5.";
-    $("flatwhy").value = ""; $("flatwhy").style.borderColor = ""; openModal();
+    $("flatmsg").textContent = "You gave the same answer (" + ratings[ROT_ITEMS[0]] + " out of 5) on all " + ROT_ITEMS.length + " scale questions.";
+    $("flatwhy").value = ""; $("flatwhy").style.borderColor = ""; $("flaterr").textContent = ""; openModal();
     return;
   }
   send(st);
@@ -524,17 +530,17 @@ $("submit").onclick = () => {
 $("flatreview").onclick = () => { closeModal(); $("card-c1").scrollIntoView({ behavior: "smooth" }); };
 $("flatok").onclick = () => {
   const r = $("flatwhy").value.trim();
-  if (r.length < 15) { $("flatwhy").focus(); $("flatwhy").style.borderColor = "var(--warn)"; return; }
+  if (r.length < 15) { $("flatwhy").focus(); $("flatwhy").style.borderColor = "var(--warn)"; $("flaterr").textContent = "Please write at least 15 characters."; return; }
   flatReason = r; closeModal(); send(stats());
 };
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("m-flat").classList.contains("hidden")) closeModal(); });
 
-async function serverTeams() {
-  const r = await fetch(SCRIPT_URL + "?device=" + encodeURIComponent(device), { cache: "no-store" });
+async function serverLookup(sub) {
+  const r = await fetch(SCRIPT_URL + "?device=" + encodeURIComponent(device) + (sub ? "&sub=" + encodeURIComponent(sub) : ""), { cache: "no-store" });
   if (!r.ok) throw new Error("HTTP " + r.status);
   const j = await r.json();
   if (!j || !j.ok || !Array.isArray(j.teams)) throw new Error("bad reply");
-  return j.teams;
+  return j;
 }
 
 async function send(st) {
@@ -560,13 +566,13 @@ async function send(st) {
       const r = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
       if (!r.ok) throw new TypeError("HTTP " + r.status);
       const j = await r.json();
-      if (!j || !j.ok) throw new Error((j && j.error) || "Server error");
+      if (!j || !j.ok) { $("err").textContent = "Could not send: " + ((j && j.error) || "server error") + " Your answers are saved on this phone."; return; }
       ok = true;
     } catch (e) {
       if (!(e instanceof TypeError)) throw e;
       await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-      const teams = await serverTeams();
-      ok = teams.includes(team.id);
+      const j = await serverLookup(payload.subId);
+      ok = j.found === true;
       if (!ok) throw new Error("not confirmed");
     }
     if (ok) {
@@ -584,7 +590,7 @@ async function syncDone() {
   const locked = TEAMS.filter(t => store.get("msa641_done_" + t.id));
   if (!locked.length) return;
   try {
-    const teams = await serverTeams();
+    const teams = (await serverLookup()).teams;
     let changed = false;
     locked.forEach(t => { if (!teams.includes(t.id)) { store.del("msa641_done_" + t.id); changed = true; } });
     if (changed && !$("s-pick").classList.contains("hidden")) renderTeams();

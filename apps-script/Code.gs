@@ -79,15 +79,20 @@ function colLetter_(n) {
 
 function doGet(e) {
   var device = e && e.parameter && e.parameter.device;
+  var sub = e && e.parameter && e.parameter.sub;
   if (!device) return json_({ ok: true, status: 'MSA 641 evaluation endpoint is running.' });
-  var sh = ss_().getSheetByName(SHEET), h = headers_(), teams = {};
+  var sh = ss_().getSheetByName(SHEET), h = headers_(), teams = {}, found = false;
   var last = sh ? sh.getLastRow() : 0;
   if (last > 1) {
     var devs = sh.getRange(2, h.indexOf('Device token') + 1, last - 1, 1).getValues();
     var tms = sh.getRange(2, h.indexOf('Team') + 1, last - 1, 1).getValues();
-    for (var i = 0; i < devs.length; i++) if (String(devs[i][0]) === String(device)) teams[tms[i][0]] = 1;
+    for (var i = 0; i < devs.length; i++) if (String(devs[i][0]) === clean_(device)) teams[tms[i][0]] = 1;
+    if (sub) {
+      var subs = sh.getRange(2, h.indexOf('Submission ID') + 1, last - 1, 1).getValues();
+      for (var k = 0; k < subs.length; k++) if (String(subs[k][0]) === clean_(sub)) found = true;
+    }
   }
-  return json_({ ok: true, teams: Object.keys(teams) });
+  return json_({ ok: true, teams: Object.keys(teams), found: found });
 }
 
 function doPost(e) {
@@ -107,10 +112,10 @@ function doPost(e) {
     var dup = '';
     if (last > 1) {
       var subs = sh.getRange(2, subCol, last - 1, 1).getValues();
-      for (var i = 0; i < subs.length; i++) if (subs[i][0] === d.subId) return json_({ ok: true, repeat: true });
+      for (var i = 0; i < subs.length; i++) if (String(subs[i][0]) === clean_(d.subId)) return json_({ ok: true, repeat: true });
       var devs = sh.getRange(2, devCol, last - 1, 1).getValues();
       var teams = sh.getRange(2, h.indexOf('Team') + 1, last - 1, 1).getValues();
-      for (var k = 0; k < devs.length; k++) if (devs[k][0] === d.device && teams[k][0] === d.team) dup = 'YES';
+      for (var k = 0; k < devs.length; k++) if (String(devs[k][0]) === clean_(d.device) && teams[k][0] === d.team) dup = 'YES';
     }
 
     var items = allItems_(), vals = [], crit = {}, total = 0;
@@ -122,9 +127,10 @@ function doPost(e) {
       vals.push(v);
     }
     Object.keys(ITEMS).forEach(function (c) {
-      var s = 0; ITEMS[c].forEach(function (key) { s += Number(d.ratings[key]); });
-      crit[c] = Math.round(WEIGHTS[c] * (s / ITEMS[c].length) / 5 * 100) / 100;
-      total += crit[c];
+      var s = 0; ITEMS[c].forEach(function (key) { s += Number(d.ratings[key]) - 1; });
+      var raw = WEIGHTS[c] * (s / ITEMS[c].length) / 4;
+      total += raw;
+      crit[c] = Math.round(raw * 100) / 100;
     });
     total = Math.round(total * 10) / 10;
 
