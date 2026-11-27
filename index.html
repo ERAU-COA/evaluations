@@ -54,9 +54,10 @@
   .bar .inner { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 10px; padding-bottom: 8px; }
   .bar .t { flex: 1; min-width: 0; }
   .bar .t b { display: block; font-size: 21px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .dots { display: flex; gap: 8px; margin-top: 6px; }
-  .dots button { width: 22px; height: 22px; padding: 0; border-radius: 50%; border: 2px solid rgba(255,255,255,.75); background: transparent; }
-  .dots button.on { background: #fff; border-color: #fff; }
+  .dots { display: flex; gap: 6px; margin-top: 6px; }
+  .dots button { width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 2px solid rgba(255,255,255,.75); background: transparent;
+    color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; line-height: 1; }
+  .dots button.on { background: #fff; border-color: #fff; color: var(--navy); }
   .bar .score { text-align: right; flex: none; }
   .bar .score b { font-size: 28px; }
   .bar .score span { display: block; font-size: 16px; opacity: .9; }
@@ -127,7 +128,7 @@
 <section id="s-form">
   <div class="bar">
     <div class="inner">
-      <div class="t"><b>Peer evaluation</b><div class="dots" id="dots" aria-label="Sections finished"></div></div>
+      <div class="t"><b>Peer evaluation</b><div class="dots" id="dots" role="group" aria-label="Sections"></div></div>
       <div class="score"><b id="total">&ndash;</b><span>of 100</span></div>
     </div>
     <div class="prog"><i id="progbar"></i></div>
@@ -171,7 +172,7 @@
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxAWVroYfVEm0C3ESjLahaiW6oNMDF9mqqL40JlNszsw5vRTlURuoVqiOjFPqE6av6F/exec";
 const COURSE = "MSA 641";
-const LAYOUT_VERSION = 5;
+const LAYOUT_VERSION = 6;
 const DRAFT = "msa641_draft";
 
 const CRITERIA = [
@@ -205,7 +206,7 @@ const CRITERIA = [
     ["c5c", "Both presenters show shared ownership of the topic"],
     ["c5d", "Both presenters share the floor equitably"] ] },
   { id: "c6", title: "Overall group instructional effectiveness", tag: "Unified impact", w: 20, items: [
-    ["c6a", "The audience clearly learns from the presentation"],
+    ["c6a", "I clearly learned from this presentation"],
     ["c6b", "The delivery is engaging and cooperative"],
     ["c6c", "The message is powerful, unified and impactful"],
     ["c6d", "The team stays highly professional from start to finish"] ] }
@@ -235,11 +236,11 @@ const STYLES = {
 const ROTATE = ["num", "rev", "grade", "stars", "bars", "agree", "words"];
 const FAMILY = { num: "n", rev: "n", yesall: "yesno" };
 const fam = t => FAMILY[t] || t;
-const FIXED = { c3a: "freq", c3c: "freq", c3d: "freq", c4c: "yesall", c4d: "yesno", c4e: "cover", c5d: "balance" };
-const NO_AGREE = ["c2a", "c2c", "c6a", "c6c", "c6d"];
+const FIXED = { c3a: "freq", c3c: "freq", c3d: "freq", c4c: "yesall", c4d: "yesno", c4e: "cover", c5d: "balance", c6a: "agree" };
+const NO_AGREE = ["c2a", "c2c", "c6c", "c6d"];
 const ROT_ITEMS = ALL_ITEMS.filter(k => !FIXED[k]);
 
-let sending = false, firstAt = null, lastAt = null, ratings = {}, comments = {}, startedAt = null, orderLog = {}, flatReason = "", attnVal = null, layout = null;
+let sending = false, sentSub = null, firstAt = null, lastAt = null, ratings = {}, comments = {}, startedAt = null, orderLog = {}, flatReason = "", attnVal = null, layout = null;
 
 const $ = id => document.getElementById(id);
 const store = {
@@ -341,13 +342,14 @@ function openForm(fresh) {
   }
   comments = (ok && draft.comments) || {};
   startedAt = (ok && draft.startedAt) || Date.now();
-  firstAt = (ok && draft.firstAt) || null; lastAt = (ok && draft.lastAt) || null;
+  firstAt = (ok && draft.firstAt) || null; lastAt = (ok && draft.lastAt) || null; sentSub = (ok && draft.sentSub) || null;
   $("s-form").classList.remove("busy");
   layout = ok ? draft.layout : makeLayout();
   orderLog = {}; flatReason = "";
   $("err").textContent = "";
   renderForm();
   show("s-form");
+  if (sentSub) { const sub = sentSub; serverLookup(sub).then(j => { if (j.found && sentSub === sub) openForm(true); }).catch(() => {}); }
   saveDraft();
 }
 
@@ -364,9 +366,10 @@ function makeLayout() {
     order[c.id] = o;
   });
   const types = {}; let bag = [], prev = null;
-  CRITERIA.forEach(c => order[c.id].forEach(key => {
+  CRITERIA.forEach(c => order[c.id].forEach((key, ix, arr) => {
     if (FIXED[key]) { types[key] = FIXED[key]; prev = FIXED[key]; return; }
-    const okFor = s => fam(s) !== fam(prev || "") && !(s === "agree" && NO_AGREE.includes(key));
+    const nxt = FIXED[arr[ix + 1]] || "";
+    const okFor = s => fam(s) !== fam(prev || "") && fam(s) !== fam(nxt) && !(s === "agree" && NO_AGREE.includes(key));
     let i = bag.findIndex(okFor);
     if (i < 0) { bag = bag.concat(shuffle(ROTATE)); i = bag.findIndex(okFor); }
     types[key] = bag.splice(i, 1)[0]; prev = types[key];
@@ -454,7 +457,7 @@ function renderForm() {
         if (label) comments._cover = Object.assign({}, comments._cover, { [key]: label });
         lastAt = Date.now(); if (!firstAt) firstAt = lastAt;
         it.classList.remove("missing"); saveDraft(); update();
-        if (wasNew) setTimeout(() => goNext(it), 280);
+        if (wasNew) setTimeout(() => goNext(it), 600);
       }));
       card.appendChild(it);
     });
@@ -478,8 +481,12 @@ function goNext(from) {
   const all = Array.from(document.querySelectorAll("#crits .item"));
   const open = el => { const k = el.id.slice(3); return k === "attn" ? !attnVal : !ratings[k]; };
   const nx = all.slice(all.indexOf(from) + 1).find(open);
-  if (nx) nx.scrollIntoView({ behavior: motion(), block: "center" });
-  else if (!all.some(open)) $("submit").scrollIntoView({ behavior: motion(), block: "center" });
+  if (nx) {
+    if (nx.closest(".crit") !== from.closest(".crit")) return;
+    const r = nx.getBoundingClientRect();
+    if (r.top > 110 && r.bottom < innerHeight - 16) return;
+    nx.scrollIntoView({ behavior: motion(), block: "center" });
+  } else if (!all.some(open)) $("submit").scrollIntoView({ behavior: motion(), block: "center" });
 }
 
 function scores() {
@@ -498,7 +505,7 @@ function update() {
   const dots = $("dots");
   if (dots.children.length !== CRITERIA.length) {
     dots.innerHTML = "";
-    CRITERIA.forEach((c, i) => { const b = document.createElement("button"); b.type = "button";
+    CRITERIA.forEach((c, i) => { const b = document.createElement("button"); b.type = "button"; b.textContent = i + 1;
       b.onclick = () => $("card-" + c.id).scrollIntoView({ behavior: motion(), block: "start" }); dots.appendChild(b); });
   }
   CRITERIA.forEach((c, i) => {
@@ -514,7 +521,7 @@ function update() {
     $("cs-" + c.id).textContent = done ? v.toFixed(1) + " / " + c.w : ""; });
 }
 
-function saveDraft() { store.set(DRAFT, { ratings, comments, startedAt, firstAt, lastAt, attnVal, layout }); }
+function saveDraft() { store.set(DRAFT, { ratings, comments, startedAt, firstAt, lastAt, attnVal, layout, sentSub }); }
 
 function stats() {
   const v = ROT_ITEMS.map(k => ratings[k]);
@@ -539,7 +546,7 @@ $("submit").onclick = () => {
   if (missing.length) {
     missing.forEach(k => { const el = $("it-" + k); if (el) el.classList.add("missing"); });
     $("err").textContent = missing.length + (missing.length === 1 ? " question still needs" : " questions still need") + " an answer.";
-    const first = document.querySelector(".item.missing"); if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+    const first = document.querySelector(".item.missing"); if (first) first.scrollIntoView({ behavior: motion(), block: "center" });
     return;
   }
   const st = stats();
@@ -551,7 +558,7 @@ $("submit").onclick = () => {
   }
   send(st);
 };
-$("flatreview").onclick = () => { closeModal(); $("card-c1").scrollIntoView({ behavior: "smooth" }); };
+$("flatreview").onclick = () => { closeModal(); $("card-c1").scrollIntoView({ behavior: motion() }); };
 $("flatok").onclick = () => {
   const r = $("flatwhy").value.trim();
   if (r.length < 15) { $("flatwhy").focus(); $("flatwhy").style.borderColor = "var(--warn)"; $("flaterr").textContent = "Please write at least 15 characters."; return; }
@@ -577,7 +584,7 @@ async function send(st) {
   const s = scores(); const now = new Date();
   const payload = {
     subId: device + "-" + startedAt,
-    course: COURSE, team: "",
+    course: COURSE,
     localTime: now.toISOString(), localDisplay: fmtNow(now),
     tz: (Intl.DateTimeFormat().resolvedOptions().timeZone || ""),
     ratings, comments: { c1: comments.c1 || "", c2: comments.c2 || "", c3: comments.c3 || "", c4: comments.c4 || "",
@@ -588,6 +595,7 @@ async function send(st) {
     sd: st.sd, distinct: st.distinct, flatCriteria: st.flatCrit, flatReason, order: orderLog, device,
     fp: await Promise.race([fpReady, new Promise(r => setTimeout(() => r({}), 1500))])
   };
+  sentSub = payload.subId; saveDraft();
   const post = async () => {
     const r = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
     if (!r.ok) throw new TypeError("HTTP " + r.status);
@@ -612,7 +620,7 @@ async function send(st) {
       store.del(DRAFT);
       const ck = "msa641_count_" + now.toDateString(), n = (Number(store.get(ck)) || 0) + 1; store.set(ck, n);
       $("dscore").textContent = s.total.toFixed(1) + " / 100";
-      $("davg").textContent = avg ? "Class average so far: " + Number(avg.classAvg).toFixed(1) + " (" + avg.classN + (avg.classN === 1 ? " rating)" : " ratings)") : "";
+      $("davg").textContent = avg && avg.classN >= 3 ? "Class average for this presentation: " + Number(avg.classAvg).toFixed(1) + " / 100 (" + avg.classN + " ratings)" : "";
       $("dwhen").textContent = fmtNow(now) + " · Evaluation " + n + " from this phone today";
       show("s-done"); $("h-done").focus();
     }
