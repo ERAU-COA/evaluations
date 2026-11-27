@@ -34,7 +34,9 @@ function headers_() {
     .concat(['Comment C1', 'Comment C2', 'Comment C3', 'Comment C4', 'Comment C5', 'Comment C6', 'Overall comment'])
     .concat(['Seconds spent', 'Rating SD', 'Distinct values', 'Flat criteria', 'Straight-line flag',
              'Straight-line reason', 'Too-fast flag', 'Duplicate flag', 'Device token', 'Submission ID', 'Item order',
-             'Attention check', 'Attention answer', 'Rating styles', 'Phone ISO time']);
+             'Attention check', 'Attention answer', 'Rating styles', 'Phone ISO time',
+             'Fingerprint ID', 'Device model', 'OS and browser', 'Screen', 'GPU', 'Device details',
+             'First answer time', 'Last answer time', 'Minutes since previous (same phone)', 'Submitted (epoch ms)']);
 }
 
 function setup() {
@@ -44,6 +46,9 @@ function setup() {
   sh.getRange(1, 1, 1, sh.getMaxColumns()).clearContent();
   sh.getRange(1, 1, 1, h.length).setValues([h]).setFontWeight('bold');
   sh.setFrozenRows(1);
+  var teamC = h.indexOf('Team') + 1;
+  sh.getRange(2, teamC, sh.getMaxRows() - 1, 1).setDataValidation(
+    SpreadsheetApp.newDataValidation().requireValueInList(Object.keys(TEAMS), true).setAllowInvalid(false).build());
 
   var sum = ss.getSheetByName('Summary') || ss.insertSheet('Summary');
   sum.clear();
@@ -68,7 +73,8 @@ function setup() {
   });
   sum.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
   sum.getRange(1, 1, 1, rows[0].length).setFontWeight('bold');
-  sum.getRange(rows.length + 2, 1).setValue('Mean total (clean) leaves out straight-line, duplicate and failed-attention-check submissions.');
+  sum.getRange(rows.length + 2, 1).setValue('Pick G1-G4 in the Team column of Responses to assign each row to a presentation.');
+  sum.getRange(rows.length + 3, 1).setValue('Mean total (clean) leaves out straight-line, duplicate and failed-attention-check submissions.');
 }
 
 function colLetter_(n) {
@@ -98,7 +104,7 @@ function doGet(e) {
 function doPost(e) {
   var lock = LockService.getScriptLock();
   try {
-    lock.waitLock(20000);
+    lock.waitLock(28000);
     var d = JSON.parse(e.postData.contents);
     var team = TEAMS[d.team] ? d.team : '';
 
@@ -109,19 +115,22 @@ function doPost(e) {
 
     var subCol = h.indexOf('Submission ID') + 1, devCol = h.indexOf('Device token') + 1;
     var last = sh.getLastRow();
-    var dup = '';
+    var nowMs = Date.now(), prevMs = 0;
     if (last > 1) {
       var subs = sh.getRange(2, subCol, last - 1, 1).getValues();
       for (var i = 0; i < subs.length; i++) if (String(subs[i][0]) === clean_(d.subId)) return json_({ ok: true, repeat: true });
       var devs = sh.getRange(2, devCol, last - 1, 1).getValues();
-      var times = sh.getRange(2, h.indexOf('Phone ISO time') + 1, last - 1, 1).getValues();
-      var t0 = new Date(d.localTime).getTime();
+      var eps = sh.getRange(2, h.indexOf('Submitted (epoch ms)') + 1, last - 1, 1).getValues();
       for (var k = 0; k < devs.length; k++) {
-        if (String(devs[k][0]) !== clean_(d.device)) continue;
-        var tk = new Date(times[k][0]).getTime();
-        if (!isNaN(t0) && !isNaN(tk) && Math.abs(t0 - tk) < 10 * 60 * 1000) dup = 'YES';
+        var ek = Number(eps[k][0]);
+        if (String(devs[k][0]) === clean_(d.device) && ek > prevMs) prevMs = ek;
       }
     }
+    var r = last + 1, teamL = colLetter_(h.indexOf('Team') + 1), devL = colLetter_(devCol);
+    var dup = '=IF(' + teamL + r + '="","",IF(COUNTIFS(' + teamL + ':' + teamL + ',' + teamL + r + ',' + devL + ':' + devL + ',' + devL + r + ')>1,"YES",""))';
+    var names = '=IF(' + teamL + r + '="","",SWITCH(' + teamL + r + Object.keys(TEAMS).map(function (t) { return ',"' + t + '","' + TEAMS[t] + '"'; }).join('') + ',""))';
+    var topic = '=IF(' + teamL + r + '="","",SWITCH(' + teamL + r + Object.keys(TOPICS).map(function (t) { return ',"' + t + '","' + TOPICS[t] + '"'; }).join('') + ',""))';
+    var hm = function (ms) { ms = Number(ms); return ms > 0 ? Utilities.formatDate(new Date(ms), Session.getScriptTimeZone(), 'HH:mm:ss') : ''; };
 
     var items = allItems_(), vals = [], crit = {}, total = 0;
     for (var j = 0; j < items.length; j++) {
@@ -150,16 +159,21 @@ function doPost(e) {
 
     var now = new Date(), stz = Session.getScriptTimeZone();
     var a = d.attn || {};
+    var fp = (d.fp && typeof d.fp === 'object') ? d.fp : {};
     var attnRes = (Number(a.value) === Number(a.target) && (Number(a.target) === 2 || Number(a.target) === 4)) ? 'PASS' : 'FAIL';
     var row = [Utilities.formatDate(now, stz, 'yyyy-MM-dd'), Utilities.formatDate(now, stz, 'HH:mm:ss'),
-               clean_(d.localDisplay), clean_(d.tz), team, TEAMS[team] || '', TOPICS[team] || '']
+               clean_(d.localDisplay), clean_(d.tz), team, names, topic]
       .concat(vals)
       .concat([crit.c1, crit.c2, crit.c3, crit.c4, crit.c5, crit.c6, total])
       .concat([c.c1, c.c2, c.c3, c.c4, c.c5, c.c6, c.overall].map(clean_))
       .concat([Number(d.durationSec) || '', Math.round(sd * 1000) / 1000, distinct, Number(d.flatCriteria) || 0, flat,
                clean_(d.flatReason), fast, dup, clean_(d.device), clean_(d.subId), clean_(order),
                attnRes, Number(a.value) ? (Number(a.value) + ' (asked ' + Number(a.target) + ', ' + clean_(a.style) + ')') : '',
-               clean_(d.styles), clean_(d.localTime)]);
+               clean_(d.styles), clean_(d.localTime),
+               clean_(fp.id), clean_(fp.model), clean_(fp.ua),
+               clean_(fp.screen ? fp.screen + ' @' + fp.dpr + 'x' : ''), clean_([fp.glVendor, fp.glRenderer].filter(Boolean).join(' / ')),
+               clean_(JSON.stringify(fp)),
+               hm(d.firstAt), hm(d.lastAt), prevMs ? Math.round((nowMs - prevMs) / 6000) / 10 : '', nowMs]);
     sh.appendRow(row);
     return json_({ ok: true, total: total });
   } catch (err) {
