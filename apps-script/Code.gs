@@ -8,6 +8,14 @@ var ITEMS = {
   c6: ['c6a', 'c6b', 'c6c', 'c6d']
 };
 var TEAMS = { G1: 'Gordon & Romane', G2: 'Christian & Aaron', G3: 'Gal & Max', G4: 'Sukwoo & Ishaa' };
+var TOPICS = {
+  G1: 'Aircraft Cannibalization as an Inventory & Procurement Strategy',
+  G2: 'Airbus A320 Family Production Ramp-Up Strategy',
+  G3: 'Production Leveling; Supply Chain Planning at Embraer (Praetor 600E)',
+  G4: 'GE’s Lean Evolution & Post-Split Aerospace Production Capacity'
+};
+var FIXED = { c3a: 1, c3c: 1, c3d: 1, c4c: 1, c4d: 1, c4e: 1, c5d: 1 };
+var YESNO = { c4c: 1, c4d: 1 };
 var SHEET = 'Responses';
 var SHEET_ID = '1BEWXV9MhyCAvf2Z5hAN_ZdPAcw2rgsSYvH75pMt7NK4';
 function ss_() { return SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById(SHEET_ID); }
@@ -25,7 +33,7 @@ function headers_() {
     .concat(['Comment C1', 'Comment C2', 'Comment C3', 'Comment C4', 'Comment C5', 'Comment C6', 'Overall comment'])
     .concat(['Seconds spent', 'Rating SD', 'Distinct values', 'Flat criteria', 'Straight-line flag',
              'Straight-line reason', 'Too-fast flag', 'Duplicate flag', 'Device token', 'Submission ID', 'Item order',
-             'Attention check', 'Attention answer', 'Rating styles']);
+             'Attention check', 'Attention answer', 'Rating styles', 'Phone ISO time']);
 }
 
 function setup() {
@@ -42,7 +50,7 @@ function setup() {
   var flagCol = colLetter_(h.indexOf('Straight-line flag') + 1);
   var attCol = colLetter_(h.indexOf('Attention check') + 1);
   var dupCol = colLetter_(h.indexOf('Duplicate flag') + 1);
-  var rows = [['Team', 'Group members', 'Evaluations', 'Mean total', 'Mean total (clean)', 'Min', 'Max', 'Flags']];
+  var rows = [['Team', 'Group members', 'Evaluations', 'Mean total', 'Mean total (clean)', 'Min', 'Max', 'Flagged rows']];
   Object.keys(TEAMS).forEach(function (t, i) {
     var r = i + 2;
     var teamCol = colLetter_(h.indexOf('Team') + 1);
@@ -55,7 +63,7 @@ function setup() {
       '=IFERROR(ROUND(AVERAGEIFS(' + tot + ',' + tr + ',A' + r + ',' + fl + ',"",' + du + ',"",' + at + ',"<>FAIL"),1),"")',
       '=IF(C' + r + '=0,"",MINIFS(' + tot + ',' + tr + ',A' + r + '))',
       '=IF(C' + r + '=0,"",MAXIFS(' + tot + ',' + tr + ',A' + r + '))',
-      '=COUNTIFS(' + tr + ',A' + r + ',' + fl + ',"YES")+COUNTIFS(' + tr + ',A' + r + ',' + du + ',"YES")+COUNTIFS(' + tr + ',A' + r + ',' + at + ',"FAIL")']);
+      '=C' + r + '-COUNTIFS(' + tr + ',A' + r + ',' + fl + ',"",' + du + ',"",' + at + ',"<>FAIL")']);
   });
   sum.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
   sum.getRange(1, 1, 1, rows[0].length).setFontWeight('bold');
@@ -108,6 +116,7 @@ function doPost(e) {
     for (var j = 0; j < items.length; j++) {
       var v = Number(d.ratings && d.ratings[items[j]]);
       if (!(v >= 1 && v <= 5 && v === Math.round(v))) return json_({ ok: false, error: 'Missing or invalid rating.' });
+      if (YESNO[items[j]] && v !== 1 && v !== 5) return json_({ ok: false, error: 'Invalid yes/no answer.' });
       vals.push(v);
     }
     Object.keys(ITEMS).forEach(function (c) {
@@ -117,9 +126,10 @@ function doPost(e) {
     });
     total = Math.round(total * 10) / 10;
 
-    var mean = vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
-    var sd = Math.sqrt(vals.reduce(function (a, b) { return a + (b - mean) * (b - mean); }, 0) / vals.length);
-    var distinct = Object.keys(vals.reduce(function (o, x) { o[x] = 1; return o; }, {})).length;
+    var rv = items.filter(function (k) { return !FIXED[k]; }).map(function (k) { return Number(d.ratings[k]); });
+    var mean = rv.reduce(function (a, b) { return a + b; }, 0) / rv.length;
+    var sd = Math.sqrt(rv.reduce(function (a, b) { return a + (b - mean) * (b - mean); }, 0) / rv.length);
+    var distinct = Object.keys(rv.reduce(function (o, x) { o[x] = 1; return o; }, {})).length;
     var flat = distinct === 1 ? 'YES' : '';
     var fast = Number(d.durationSec) < 60 ? 'YES' : '';
     var c = d.comments || {};
@@ -127,15 +137,16 @@ function doPost(e) {
 
     var now = new Date(), stz = Session.getScriptTimeZone();
     var a = d.attn || {};
-    var attnRes = a.value ? (Number(a.value) === Number(a.target) ? 'PASS' : 'FAIL') : '';
+    var attnRes = (Number(a.value) === Number(a.target) && (Number(a.target) === 2 || Number(a.target) === 4)) ? 'PASS' : 'FAIL';
     var row = [Utilities.formatDate(now, stz, 'yyyy-MM-dd'), Utilities.formatDate(now, stz, 'HH:mm:ss'),
-               String(d.localDisplay || ''), String(d.tz || ''), d.team, TEAMS[d.team], String(d.topic || '')]
+               clean_(d.localDisplay), clean_(d.tz), d.team, TEAMS[d.team], TOPICS[d.team]]
       .concat(vals)
       .concat([crit.c1, crit.c2, crit.c3, crit.c4, crit.c5, crit.c6, total])
       .concat([c.c1, c.c2, c.c3, c.c4, c.c5, c.c6, c.overall].map(clean_))
       .concat([Number(d.durationSec) || '', Math.round(sd * 1000) / 1000, distinct, Number(d.flatCriteria) || 0, flat,
-               clean_(d.flatReason), fast, dup, String(d.device || ''), String(d.subId || ''), order,
-               attnRes, a.value ? (a.value + ' (asked ' + a.target + ', ' + a.style + ')') : '', String(d.styles || '')]);
+               clean_(d.flatReason), fast, dup, clean_(d.device), clean_(d.subId), clean_(order),
+               attnRes, Number(a.value) ? (Number(a.value) + ' (asked ' + Number(a.target) + ', ' + clean_(a.style) + ')') : '',
+               clean_(d.styles), clean_(d.localTime)]);
     sh.appendRow(row);
     return json_({ ok: true, total: total });
   } catch (err) {

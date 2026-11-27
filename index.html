@@ -10,116 +10,123 @@
 <style>
   :root {
     --navy: #0b2a4a;
-    --accent: #1f6feb;
+    --accent: #1a5fd0;
     --bg: #f3f5f8;
     --card: #ffffff;
     --text: #1b1f24;
-    --muted: #5b6470;
+    --muted: #4d5560;
     --line: #d9dee5;
+    --edge: #9aa4b0;
     --sel: #0b2a4a;
     --warn: #b42318;
     --ok: #1a7f37;
-    --bar: #c4ccd5;
+    --bar: #8b95a1;
+    --star: #b7791f;
     --btn: #ffffff;
-    --sep: rgba(0,0,0,.08);
+    --sep: rgba(0,0,0,.10);
     --t1: #eaf2ff; --t2: #e9f7ee; --t3: #fff3e2; --t4: #f2ecff; --t5: #e5f6f7; --t6: #ffecf0;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0f1419; --card: #1a2027; --text: #e8ebef; --muted: #9aa4b0;
-      --line: #2f3843; --sel: #4c8dff; --accent: #4c8dff; --bar: #4f5b69;
-      --btn: #11161b; --sep: rgba(255,255,255,.08);
+      --bg: #0f1419; --card: #1a2027; --text: #e8ebef; --muted: #a9b2bd;
+      --line: #2f3843; --edge: #5a6573; --sel: #2f6fd6; --accent: #6ea2ff; --bar: #5a6573; --star: #f0b429;
+      --warn: #ff7b72; --ok: #3fb950;
+      --btn: #11161b; --sep: rgba(255,255,255,.10);
       --t1: #172233; --t2: #15261d; --t3: #2a2216; --t4: #211b31; --t5: #13272a; --t6: #2c1920;
     }
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   html, body { margin: 0; background: var(--bg); color: var(--text);
     font: 20px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
   body { padding-bottom: env(safe-area-inset-bottom); }
-  .wrap { max-width: 640px; margin: 0 auto; padding: 0 12px 40px; }
+  body.lock { overflow: hidden; }
+  button { cursor: pointer; }
+  button:active { filter: brightness(.92); }
+  button:focus-visible, textarea:focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 12px 40px;
+    padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
   header.top { background: var(--navy); color: #fff; padding: 18px 14px 16px;
     padding-top: calc(18px + env(safe-area-inset-top)); }
   header.top .inner { max-width: 640px; margin: 0 auto; }
-  header.top h1 { font-size: 27px; margin: 0 0 4px; }
-  header.top .sub { font-size: 18px; opacity: .85; }
-  .when { font-size: 18px; opacity: .85; margin-top: 6px; }
+  header.top h1 { font-size: 27px; margin: 0 0 4px; line-height: 1.2; }
+  header.top .sub { font-size: 18px; opacity: .9; }
+  .when { font-size: 18px; opacity: .9; margin-top: 6px; }
   h2 { font-size: 24px; margin: 22px 2px 10px; }
   .note { color: var(--muted); font-size: 19px; margin: 8px 2px 14px; }
+  .pickmsg { color: var(--ok); font-weight: 600; font-size: 19px; margin: 0 2px 12px; }
   .team { display: block; width: 100%; text-align: left; background: var(--card); color: var(--text);
-    border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin: 0 0 12px; font: inherit; cursor: pointer; }
-  .team:active { transform: scale(.99); }
+    border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin: 0 0 12px; font: inherit; }
   .team .g { font-size: 16px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .04em; }
   .team .names { font-weight: 700; font-size: 25px; margin: 2px 0 4px; }
   .team .topic { color: var(--muted); font-size: 19px; }
-  .team.done { opacity: .55; }
-  .team .badge { float: right; font-size: 15px; font-weight: 700; color: var(--ok); }
+  .team.done { border: 2px solid var(--ok); }
+  .team .badge { float: right; font-size: 16px; font-weight: 700; color: var(--ok); }
 
   .bar { position: sticky; top: 0; z-index: 10; background: var(--navy); color: #fff;
-    padding: 10px 14px; padding-top: calc(10px + env(safe-area-inset-top)); }
-  .bar .inner { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 10px; }
-  .bar .back { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.4);
-    border-radius: 10px; padding: 6px 10px; font: inherit; font-size: 17px; min-height: 46px; }
+    padding: 8px 12px 0; padding-top: calc(8px + env(safe-area-inset-top)); }
+  .bar .inner { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 10px; padding-bottom: 8px; }
+  .bar .back { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.5);
+    border-radius: 10px; font: inherit; font-size: 28px; line-height: 1; width: 46px; height: 46px; flex: none; }
   .bar .t { flex: 1; min-width: 0; }
-  .bar .t b { display: block; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .bar .t span { font-size: 16px; opacity: .85; }
-  .bar .score { text-align: right; }
+  .bar .t b { display: block; font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar .t span { font-size: 17px; opacity: .9; white-space: nowrap; }
+  .bar .score { text-align: right; flex: none; }
   .bar .score b { font-size: 28px; }
-  .bar .score span { display: block; font-size: 14px; opacity: .8; }
-  .prog { height: 4px; background: rgba(255,255,255,.2); }
+  .bar .score span { display: block; font-size: 16px; opacity: .9; }
+  .prog { height: 5px; background: rgba(255,255,255,.2); margin: 0 -12px; }
   .prog i { display: block; height: 100%; width: 0; background: #7fb3ff; transition: width .2s; }
 
-  .crit { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px 14px 10px; margin: 18px 0; }
+  .crit { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px 14px 10px; margin: 18px 0; scroll-margin-top: 110px; }
   .crit.c1 { background: var(--t1); } .crit.c2 { background: var(--t2); } .crit.c3 { background: var(--t3); }
   .crit.c4 { background: var(--t4); } .crit.c5 { background: var(--t5); } .crit.c6 { background: var(--t6); }
-  .crit[class*=" c"] { border-color: transparent; }
-  .crit h3 { font-size: 26px; margin: 0 0 2px; }
+  .crit.tint { border-color: transparent; }
+  .crit h3 { font-size: 26px; margin: 0 0 2px; line-height: 1.2; }
   .crit .w { font-size: 18px; color: var(--muted); margin-bottom: 10px; }
   .crit .cs { float: right; font-size: 19px; font-weight: 700; color: var(--accent); }
-  .item { padding: 16px 0 14px; border-top: 1px solid var(--sep); }
+  .item { padding: 14px 0 12px; border-top: 1px solid var(--sep); scroll-margin-top: 110px; }
   .item .q { font-size: 24px; font-weight: 600; line-height: 1.3; margin-bottom: 8px; }
-  .item.missing .q { color: var(--warn); font-weight: 600; }
-  .scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-  .scale button { border: 1.5px solid var(--line); background: var(--btn); color: var(--text); border-radius: 10px;
-    padding: 8px 0 6px; font: inherit; min-height: 66px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .scale button b { font-size: 28px; line-height: 1; }
-  .scale button small { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.1; }
-  .scale button.on { background: var(--sel); border-color: var(--sel); color: #fff; }
-  .scale button.on small { color: rgba(255,255,255,.85); }
+  .item.missing { border-left: 5px solid var(--warn); padding-left: 10px; }
+  .item.missing .q { color: var(--warn); }
+  .item.missing .q::after { content: " (needs an answer)"; font-weight: 400; font-size: 19px; }
   .hint { font-size: 18px; color: var(--muted); margin: 0 0 10px; font-style: italic; }
-  .cap { font-size: 18px; color: var(--accent); font-weight: 600; min-height: 18px; margin-top: 4px; }
+  .cap { font-size: 18px; color: var(--accent); font-weight: 600; min-height: 24px; margin-top: 6px; }
+  .scale { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+  .scale button, .yesno button, .list button { border: 2px solid var(--edge); background: var(--btn); color: var(--text); font: inherit; }
+  .scale button { border-radius: 12px; min-height: 62px; padding: 0; }
+  .scale button b { font-size: 28px; line-height: 1; }
   .scale.grade button b { font-size: 30px; }
+  .scale button.on, .yesno button.on, .list button.on { background: var(--sel); border-color: var(--sel); color: #fff; }
   .stars { display: flex; gap: 4px; }
   .stars button { flex: 1; border: none; background: none; font-size: 54px; line-height: 1; padding: 4px 0;
     color: var(--bar); font-family: inherit; }
-  .stars button.on { color: #e3a008; }
+  .stars button.on { color: var(--star); }
   .bars { display: flex; gap: 10px; align-items: flex-end; height: 90px; }
   .bars button { flex: 1; height: 100%; border: none; background: none; padding: 0; display: flex; align-items: flex-end; }
   .bars button i { display: block; width: 100%; border-radius: 6px 6px 2px 2px; background: var(--bar); }
   .bars button.on i { background: var(--sel); }
-  .list { display: grid; gap: 8px; }
+  .list { display: grid; gap: 6px; }
+  .list button { text-align: left; border-radius: 12px; padding: 10px 16px; font-size: 21px; min-height: 54px; }
+  .list button.on { font-weight: 600; }
   .yesno { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .yesno button { border: 1.5px solid var(--line); background: var(--btn); color: var(--text); border-radius: 12px;
-    font: inherit; font-size: 24px; font-weight: 700; min-height: 66px; }
-  .yesno button.on { background: var(--sel); border-color: var(--sel); color: #fff; }
-  .list button { text-align: left; border: 1.5px solid var(--line); background: var(--btn); color: var(--text);
-    border-radius: 12px; padding: 14px 16px; font: inherit; font-size: 22px; min-height: 60px; }
-  .list button.on { background: var(--sel); border-color: var(--sel); color: #fff; font-weight: 600; }
+  .yesno button { border-radius: 12px; font-size: 24px; font-weight: 700; min-height: 64px; }
   .addc { background: none; border: none; color: var(--accent); font: inherit; font-size: 20px; padding: 10px 0; }
-  textarea { width: 100%; min-height: 84px; border: 1.5px solid var(--line); border-radius: 10px; padding: 10px;
+  textarea { width: 100%; min-height: 96px; border: 2px solid var(--edge); border-radius: 12px; padding: 10px;
     font: inherit; font-size: 20px; background: var(--btn); color: var(--text); resize: vertical; margin: 4px 0 10px; }
+  .opt { font-weight: 400; color: var(--muted); font-size: 19px; }
   .submit { display: block; width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 14px;
     padding: 20px; font: inherit; font-size: 23px; font-weight: 700; margin-top: 18px; }
   .submit:disabled { opacity: .6; }
   .err { color: var(--warn); font-size: 19px; margin: 10px 2px; min-height: 1em; }
   .hidden { display: none !important; }
 
-  .modal { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
-  .sheet { background: var(--card); color: var(--text); width: 100%; max-width: 640px; border-radius: 18px 18px 0 0;
-    padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); }
-  .sheet h3 { margin: 0 0 8px; }
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 12px; }
+  .sheet { background: var(--card); color: var(--text); width: 100%; max-width: 600px; border-radius: 18px;
+    padding: 20px 16px; max-height: 90vh; max-height: 90dvh; overflow: auto; }
+  .sheet h3 { margin: 0 0 8px; font-size: 24px; }
   .sheet p { margin: 0 0 10px; color: var(--muted); font-size: 19px; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
-  .btn2 { border-radius: 12px; padding: 14px; font: inherit; font-weight: 700; border: 1.5px solid var(--line); background: var(--bg); color: var(--text); }
+  .btn2 { border-radius: 12px; padding: 14px; font: inherit; font-weight: 700; border: 2px solid var(--edge); background: var(--btn); color: var(--text); }
   .btn2.pri { background: var(--accent); border-color: var(--accent); color: #fff; }
 
   .thanks { text-align: center; padding: 40px 10px; }
@@ -136,27 +143,30 @@
     <div class="when" id="now1"></div>
   </div></header>
   <div class="wrap">
+    <p class="note">Anonymous: no name or login. Each point is rated out of 5, and the answer format changes from point to point. Comments are optional.</p>
     <h2>Which team are you evaluating?</h2>
+    <div class="pickmsg hidden" id="pickmsg" role="status"></div>
     <div id="teams"></div>
-    <p class="note">Anonymous: no name, email or login is collected. Every point is scored out of 5, but the way you answer changes from point to point: numbers, stars, letter grades, bars and words. Comments are optional.</p>
   </div>
 </section>
 
 <section id="s-form" class="hidden">
-  <div class="bar"><div class="inner">
-    <button class="back" id="back" type="button">&#8249; Teams</button>
-    <div class="t"><b id="tname"></b><span id="tcount">0 of 0 rated</span></div>
-    <div class="score"><b id="total">&ndash;</b><span>of 100</span></div>
-  </div></div>
-  <div class="prog"><i id="progbar"></i></div>
+  <div class="bar">
+    <div class="inner">
+      <button class="back" id="back" type="button" aria-label="Back to teams">&#8249;</button>
+      <div class="t"><b id="tname"></b><span id="tcount"></span></div>
+      <div class="score"><b id="total">&ndash;</b><span>of 100</span></div>
+    </div>
+    <div class="prog"><i id="progbar"></i></div>
+  </div>
   <div class="wrap">
     <div class="note" id="now2"></div>
     <div id="crits"></div>
     <div class="crit">
-      <h3>Overall comments <span style="font-weight:400;color:var(--muted);font-size:14px">(optional)</span></h3>
-      <textarea id="c-overall" placeholder="What worked well? What could the team improve?"></textarea>
+      <h3 id="h-overall">Overall comments <span class="opt">(optional)</span></h3>
+      <textarea id="c-overall" aria-labelledby="h-overall" placeholder="What worked well? What could the team improve?"></textarea>
     </div>
-    <div class="err" id="err"></div>
+    <div class="err" id="err" role="alert"></div>
     <button class="submit" id="submit" type="button">Submit evaluation</button>
   </div>
 </section>
@@ -164,18 +174,18 @@
 <section id="s-done" class="hidden">
   <div class="wrap thanks">
     <div class="big" id="dscore"></div>
-    <h2>Submitted. Thank you!</h2>
+    <h2 id="h-done" tabindex="-1">Submitted. Thank you!</h2>
     <p class="note" id="dteam"></p>
     <button class="submit" id="again" type="button">Evaluate another team</button>
   </div>
 </section>
 
-<div class="modal hidden" id="m-flat">
+<div class="modal hidden" id="m-flat" role="dialog" aria-modal="true" aria-labelledby="h-flat">
   <div class="sheet">
-    <h3>Every rating is the same</h3>
+    <h3 id="h-flat">Every rating is the same</h3>
     <p id="flatmsg"></p>
     <p>Please review your ratings, or tell us in one sentence why every point deserves the same score.</p>
-    <textarea id="flatwhy" placeholder="Reason (at least 15 characters)"></textarea>
+    <textarea id="flatwhy" aria-labelledby="h-flat" placeholder="Reason (at least 15 characters)"></textarea>
     <div class="row2">
       <button class="btn2" id="flatreview" type="button">Review ratings</button>
       <button class="btn2 pri" id="flatok" type="button">Submit anyway</button>
@@ -186,6 +196,7 @@
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxAWVroYfVEm0C3ESjLahaiW6oNMDF9mqqL40JlNszsw5vRTlURuoVqiOjFPqE6av6F/exec";
 const COURSE = "MSA 641";
+const LAYOUT_VERSION = 3;
 
 const TEAMS = [
   { id: "G1", names: "Gordon & Romane",   topic: "Aircraft Cannibalization as an Inventory & Procurement Strategy" },
@@ -197,41 +208,67 @@ const TEAMS = [
 const CRITERIA = [
   { id: "c1", title: "Preparation & group organization", tag: "Team flow", w: 20, items: [
     ["c1a", "Content follows a logical, cohesive sequence"],
-    ["c1b", "Presents a clear, shared outline or agenda"],
-    ["c1c", "Makes smooth transitions between the two speakers"],
-    ["c1d", "Shows evidence of joint preparation and planning"],
-    ["c1e", "Delivers one unified strategy, not disconnected parts"] ] },
-  { id: "c2", title: "Quality of content & synthesis", tag: "Shared mastery", w: 20, items: [
-    ["c2a", "Shows deep knowledge of operations and supply chain concepts"],
-    ["c2b", "Applies decision-making concepts accurately"],
-    ["c2c", "Integrates graduate-level research throughout"],
-    ["c2d", "Both presenters show command of the material"],
-    ["c2e", "Presents a unified thesis with no contradictions or gaps"] ] },
-  { id: "c3", title: "Presentation technique", tag: "Coordinated delivery", w: 20, items: [
-    ["c3a", "Makes eye contact with the audience"],
-    ["c3b", "Speaks with an energetic, confident voice"],
-    ["c3c", "Speaks without reading from slides or notes"],
-    ["c3d", "Presenters stay attentive and respectful toward each other"],
-    ["c3e", "Shows a positive, coordinated team presence"] ] },
-  { id: "c4", title: "PowerPoint visual aids", tag: "Cohesive design", w: 10, items: [
-    ["c4a", "Slides are legible, professional and consistent"],
+    ["c1b", "The team presents a clear, joint outline or agenda"],
+    ["c1c", "Speaker transitions are smooth and seamless"],
+    ["c1d", "The team shows evidence of shared preparation and planning"],
+    ["c1e", "The team delivers one unified strategy, not disconnected parts"] ] },
+  { id: "c2", title: "Quality of content & supply chain synthesis", tag: "Shared mastery", w: 20, items: [
+    ["c2a", "The team shows deep collective knowledge of supply chain concepts"],
+    ["c2b", "The team applies critical decision-making concepts accurately"],
+    ["c2c", "The team integrates graduate-level research throughout"],
+    ["c2d", "Both presenters show consistent command of the material"],
+    ["c2e", "The team presents a unified thesis with no contradictions or gaps"] ] },
+  { id: "c3", title: "Technique of presentation", tag: "Coordinated delivery", w: 20, items: [
+    ["c3a", "The presenters maintain professional eye contact with the audience"],
+    ["c3b", "The presenters speak with an energetic, forceful voice"],
+    ["c3c", "The presenters deliver extemporaneously, without reading slides or notes"],
+    ["c3d", "The presenters stay attentive and respectful toward each other"],
+    ["c3e", "The team shows a positive, coordinated presence"] ] },
+  { id: "c4", title: "PowerPoint visual aids & requirements", tag: "Cohesive design", w: 10, items: [
+    ["c4a", "Slides are legible, professional and consistent in design"],
     ["c4b", "Slides illustrate the key concepts clearly"],
-    ["c4c", "Slides include intro, overview, issue brief and conclusions"],
-    ["c4d", "Includes an APA-formatted reference slide"],
-    ["c4e", "Images have an attribution beneath them"] ] },
-  { id: "c5", title: "Shared defense & time management", tag: "Team Q&A", w: 10, items: [
-    ["c5a", "Handles audience questions effectively"],
-    ["c5b", "Answers are cohesive and build on each other"],
+    ["c4c", "Slides include all required sections: intro, overview, issue brief and conclusions"],
+    ["c4d", "Slides include a reference slide in APA style"],
+    ["c4e", "Every image has an attribution beneath it"] ] },
+  { id: "c5", title: "Shared defense", tag: "Team Q&A", w: 10, items: [
+    ["c5a", "The team handles Q&A and defends its work effectively"],
+    ["c5b", "Q&A answers are cohesive and build on each other"],
     ["c5c", "Both presenters show shared ownership of the topic"],
-    ["c5d", "Both presenters share the speaking time"] ] },
-  { id: "c6", title: "Overall instructional effectiveness", tag: "Unified impact", w: 20, items: [
+    ["c5d", "Both presenters share the floor equitably"] ] },
+  { id: "c6", title: "Overall group instructional effectiveness", tag: "Unified impact", w: 20, items: [
     ["c6a", "The audience clearly learns from the presentation"],
-    ["c6b", "Delivery is engaging and cooperative"],
-    ["c6c", "The overall message is clear, unified and impactful"],
-    ["c6d", "Stays highly professional from start to finish"] ] }
+    ["c6b", "The delivery is engaging and cooperative"],
+    ["c6c", "The message is powerful, unified and impactful"],
+    ["c6d", "The team stays highly professional from start to finish"] ] }
 ];
-const LABELS = ["Very poor", "Poor", "Fair", "Good", "Excellent"];
 const ALL_ITEMS = CRITERIA.flatMap(c => c.items.map(i => i[0]));
+
+const LABELS = ["Very poor", "Needs improvement", "Fair", "Good", "Excellent"];
+const GRADES = ["F", "D", "C", "B", "A"];
+const AGREE = ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"];
+const COVER = ["None", "A few", "About half", "Most", "All"];
+const FREQ = ["Never", "Rarely", "Sometimes", "Usually", "Always"];
+const BALANCE = ["One person did all of it", "Mostly one person", "Somewhat uneven", "Nearly even", "Evenly shared"];
+const STYLES = {
+  num:     { hint: "1 = very poor, 5 = excellent" },
+  rev:     { hint: "5 = excellent, 1 = very poor" },
+  grade:   { hint: "Give it a letter grade" },
+  stars:   { hint: "Tap the stars: 5 stars = excellent" },
+  bars:    { hint: "Tap a bar: the taller, the better" },
+  agree:   { hint: "How much do you agree?" },
+  words:   { hint: "Which word fits best?" },
+  yesno:   { hint: "Yes or no" },
+  yesall:  { hint: "Yes only if all four are there" },
+  cover:   { hint: "How many images have one?" },
+  freq:    { hint: "How often?" },
+  balance: { hint: "How evenly was the floor shared?" }
+};
+const ROTATE = ["num", "rev", "grade", "stars", "bars", "agree", "words"];
+const FAMILY = { num: "n", rev: "n", yesall: "yesno" };
+const fam = t => FAMILY[t] || t;
+const FIXED = { c3a: "freq", c3c: "freq", c3d: "freq", c4c: "yesall", c4d: "yesno", c4e: "cover", c5d: "balance" };
+const NO_AGREE = ["c2a", "c2c", "c6a", "c6c", "c6d"];
+const ROT_ITEMS = ALL_ITEMS.filter(k => !FIXED[k]);
 
 let team = null, ratings = {}, comments = {}, startedAt = null, orderLog = {}, flatReason = "", attnVal = null, layout = null;
 
@@ -241,8 +278,11 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
   del(k) { try { localStorage.removeItem(k); } catch (e) {} }
 };
-let device = store.get("msa641_device");
-if (!device) { device = Math.random().toString(36).slice(2) + Date.now().toString(36); store.set("msa641_device", device); }
+function readCookie(n) { const m = document.cookie.match(new RegExp("(?:^|; )" + n + "=([^;]*)")); return m ? decodeURIComponent(m[1]) : null; }
+let device = store.get("msa641_device") || readCookie("msa641_device");
+if (!device) device = Math.random().toString(36).slice(2) + Date.now().toString(36);
+store.set("msa641_device", device);
+try { document.cookie = "msa641_device=" + encodeURIComponent(device) + "; max-age=31536000; path=/; SameSite=Lax"; } catch (e) {}
 
 function fmtNow(d) {
   return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" }) +
@@ -253,6 +293,9 @@ tick(); setInterval(tick, 15000);
 
 function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function show(id) { ["s-pick", "s-form", "s-done"].forEach(s => $(s).classList.toggle("hidden", s !== id)); window.scrollTo(0, 0); }
+function esc(s) { return String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch])); }
+
+function pickMsg(text) { const m = $("pickmsg"); m.textContent = text || ""; m.classList.toggle("hidden", !text); }
 
 function renderTeams() {
   $("teams").innerHTML = "";
@@ -265,9 +308,10 @@ function renderTeams() {
     b.querySelector(".names").textContent = t.names;
     b.querySelector(".topic").textContent = t.topic;
     b.onclick = async () => {
-      if (done) {
+      pickMsg("");
+      if (store.get("msa641_done_" + t.id)) {
         await syncDone();
-        if (store.get("msa641_done_" + t.id)) { alert("You already submitted an evaluation for Group " + (i + 1) + " on this phone. One evaluation per team, please."); return; }
+        if (store.get("msa641_done_" + t.id)) { pickMsg("You already evaluated Group " + (i + 1) + " on this phone."); return; }
       }
       openTeam(t, i);
     };
@@ -275,98 +319,112 @@ function renderTeams() {
   });
 }
 
+function layoutValid(L) {
+  if (!L || L.v !== LAYOUT_VERSION || !L.order || !L.types || !L.attn) return false;
+  return CRITERIA.every(c => {
+    const a = (L.order[c.id] || []).slice().sort().join(","), b = c.items.map(i => i[0]).sort().join(",");
+    return a === b;
+  });
+}
+
 function openTeam(t, idx) {
   team = Object.assign({ n: idx + 1 }, t);
   const draft = store.get("msa641_draft_" + t.id);
-  ratings = (draft && draft.ratings) || {};
+  const ok = draft && layoutValid(draft.layout);
+  ratings = {}; attnVal = null;
+  if (ok) {
+    Object.keys(draft.ratings || {}).forEach(k => { const v = Number(draft.ratings[k]);
+      if (ALL_ITEMS.includes(k) && v >= 1 && v <= 5) ratings[k] = v; });
+    attnVal = draft.attnVal || null;
+  }
   comments = (draft && draft.comments) || {};
-  startedAt = (draft && draft.startedAt) || Date.now();
-  attnVal = (draft && draft.attnVal) || null;
-  layout = (draft && draft.layout) || makeLayout();
-  Object.keys(FIXED).forEach(k => layout.types[k] = FIXED[k]);
+  startedAt = (ok && draft.startedAt) || Date.now();
+  layout = ok ? draft.layout : makeLayout();
   orderLog = {}; flatReason = "";
-  $("tname").textContent = "Group " + team.n + ": " + t.names;
+  $("tname").textContent = "Group " + team.n;
   $("err").textContent = "";
   renderForm();
   show("s-form");
+  saveDraft();
 }
 
-const GRADES = ["F", "D", "C", "B", "A"];
-const AGREE = ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"];
-const WORDS = ["Very poor", "Needs improvement", "Fair", "Good", "Excellent"];
-const STYLES = {
-  num:   { hint: "1 = very poor, 5 = excellent" },
-  rev:   { hint: "5 = excellent, 1 = very poor" },
-  grade: { hint: "Give it a letter grade" },
-  stars: { hint: "Tap the stars: 5 stars = excellent" },
-  bars:  { hint: "Tap a bar: the taller, the better" },
-  agree: { hint: "How much do you agree?" },
-  words: { hint: "Which word fits best?" }
-};
-const STYLE_KEYS = Object.keys(STYLES);
-const FIXED = { c3a: "freq", c3c: "freq", c4c: "yesno", c4d: "yesno", c4e: "cover", c5d: "balance" };
-STYLES.yesno = { hint: "Yes or no" };
-STYLES.cover = { hint: "How many images have one?" };
-STYLES.freq = { hint: "How often?" };
-STYLES.balance = { hint: "How evenly was speaking time shared?" };
-const COVER = ["None", "A few", "About half", "Most", "All"];
-const FREQ = ["Never", "Rarely", "Sometimes", "Mostly", "Always"];
-const BALANCE = ["One person did all of it", "Mostly one person", "Somewhat uneven", "Nearly even", "Evenly shared"];
+function noSameFixedNeighbours(keys) {
+  for (let i = 1; i < keys.length; i++) if (FIXED[keys[i]] && FIXED[keys[i - 1]] && fam(FIXED[keys[i]]) === fam(FIXED[keys[i - 1]])) return false;
+  return true;
+}
+
+function makeLayout() {
+  const order = {};
+  CRITERIA.forEach(c => {
+    let o = shuffle(c.items.map(i => i[0]));
+    for (let t = 0; t < 2000 && !noSameFixedNeighbours(o); t++) o = shuffle(o);
+    order[c.id] = o;
+  });
+  const types = {}; let bag = [], prev = null;
+  CRITERIA.forEach(c => order[c.id].forEach(key => {
+    if (FIXED[key]) { types[key] = FIXED[key]; prev = FIXED[key]; return; }
+    const okFor = s => fam(s) !== fam(prev || "") && !(s === "agree" && NO_AGREE.includes(key));
+    let i = bag.findIndex(okFor);
+    if (i < 0) { bag = bag.concat(shuffle(ROTATE)); i = bag.findIndex(okFor); }
+    types[key] = bag.splice(i, 1)[0]; prev = types[key];
+  }));
+  const crit = CRITERIA[1 + Math.floor(Math.random() * 4)].id;
+  const pos = 1 + Math.floor(Math.random() * 3);
+  const near = [types[order[crit][pos - 1]], types[order[crit][pos]]].filter(Boolean).map(fam);
+  const attn = { crit, pos, type: shuffle(ROTATE.filter(t => !near.includes(fam(t))))[0], target: Math.random() < .5 ? 2 : 4 };
+  return { v: LAYOUT_VERSION, order, types, attn };
+}
 
 function labelFor(type, v) {
   return { num: "“" + v + "”", rev: "“" + v + "”", grade: "the letter “" + GRADES[v - 1] + "”",
     stars: v + (v === 1 ? " star" : " stars"), bars: "bar number " + v + " from the left",
-    agree: "“" + AGREE[v - 1] + "”", words: "“" + WORDS[v - 1] + "”" }[type];
+    agree: "“" + AGREE[v - 1] + "”", words: "“" + LABELS[v - 1] + "”" }[type];
 }
 
-function makeLayout() {
-  const order = {}; CRITERIA.forEach(c => order[c.id] = shuffle(c.items.map(i => i[0])));
-  const n = ALL_ITEMS.length + 1; let seq = [];
-  while (seq.length < n) {
-    let s = shuffle(STYLE_KEYS);
-    if (seq.length && s[0] === seq[seq.length - 1]) s.push(s.shift());
-    seq = seq.concat(s);
-  }
-  const types = {}; let k = 0;
-  CRITERIA.forEach(c => order[c.id].forEach(key => types[key] = seq[k++]));
-  const crit = CRITERIA[1 + Math.floor(Math.random() * 4)].id;
-  const pos = 1 + Math.floor(Math.random() * 3);
-  const near = [types[order[crit][pos - 1]], types[order[crit][pos]]];
-  const attn = { crit, pos, type: shuffle(STYLE_KEYS.filter(t => !near.includes(t)))[0], target: Math.random() < .5 ? 2 : 4 };
-  return { order, types, attn };
-}
-
-function buildWidget(type, current, onPick) {
+function buildWidget(type, qid, current, onPick) {
   const wrap = document.createElement("div");
   const hint = document.createElement("div"); hint.className = "hint"; hint.textContent = STYLES[type].hint;
-  const box = document.createElement("div"); box.setAttribute("role", "radiogroup");
+  const box = document.createElement("div"); box.setAttribute("role", "radiogroup"); box.setAttribute("aria-labelledby", qid);
   const cap = document.createElement("div"); cap.className = "cap";
   wrap.append(hint, box, cap);
   const btns = [];
-  const add = (v, html, cls) => {
-    const b = document.createElement("button"); b.type = "button"; b.className = cls || "";
-    b.setAttribute("role", "radio"); b.setAttribute("aria-label", v + " of 5");
+  const coded = ["num", "rev", "grade", "stars", "bars"].includes(type);
+  const add = (v, html) => {
+    const b = document.createElement("button"); b.type = "button";
+    b.setAttribute("role", "radio"); b.setAttribute("aria-checked", "false");
+    if (coded) b.setAttribute("aria-label", v + " of 5, " + LABELS[v - 1]);
     b.innerHTML = html; b.dataset.v = v; b.onclick = () => { paint(v); onPick(v); };
     box.appendChild(b); btns.push(b);
   };
-  const vals = [1, 2, 3, 4, 5];
-  if (type === "num") { box.className = "scale"; vals.forEach(v => add(v, `<b>${v}</b><small>${LABELS[v - 1]}</small>`)); }
-  if (type === "rev") { box.className = "scale"; vals.slice().reverse().forEach(v => add(v, `<b>${v}</b><small>${LABELS[v - 1]}</small>`)); }
-  if (type === "grade") { box.className = "scale grade"; vals.forEach(v => add(v, `<b>${GRADES[v - 1]}</b>`)); }
-  if (type === "stars") { box.className = "stars"; vals.forEach(v => add(v, "★")); }
-  if (type === "bars") { box.className = "bars"; vals.forEach(v => add(v, `<i style="height:${14 + v * 11}px"></i>`)); }
-  if (type === "agree") { box.className = "list"; vals.forEach(v => add(v, AGREE[v - 1])); }
-  if (type === "words") { box.className = "list"; vals.slice().reverse().forEach(v => add(v, WORDS[v - 1])); }
-  if (type === "yesno") { box.className = "yesno"; add(5, "Yes"); add(1, "No"); }
-  if (type === "cover") { box.className = "list"; vals.slice().reverse().forEach(v => add(v, COVER[v - 1])); }
-  if (type === "freq") { box.className = "list"; vals.slice().reverse().forEach(v => add(v, FREQ[v - 1])); }
-  if (type === "balance") { box.className = "list"; vals.slice().reverse().forEach(v => add(v, BALANCE[v - 1])); }
+  const up = [1, 2, 3, 4, 5], down = [5, 4, 3, 2, 1];
+  if (type === "num") { box.className = "scale"; up.forEach(v => add(v, `<b>${v}</b>`)); }
+  if (type === "rev") { box.className = "scale"; down.forEach(v => add(v, `<b>${v}</b>`)); }
+  if (type === "grade") { box.className = "scale grade"; up.forEach(v => add(v, `<b>${GRADES[v - 1]}</b>`)); }
+  if (type === "stars") { box.className = "stars"; up.forEach(v => add(v, "★")); }
+  if (type === "bars") { box.className = "bars"; up.forEach(v => add(v, `<i style="height:${14 + v * 13}px"></i>`)); }
+  if (type === "agree") { box.className = "list"; down.forEach(v => add(v, AGREE[v - 1])); }
+  if (type === "words") { box.className = "list"; down.forEach(v => add(v, LABELS[v - 1])); }
+  if (type === "yesno" || type === "yesall") { box.className = "yesno"; add(5, "Yes"); add(1, "No"); }
+  if (type === "cover") { box.className = "list"; down.forEach(v => add(v, COVER[v - 1])); add(5, "No images used"); }
+  if (type === "freq") { box.className = "list"; down.forEach(v => add(v, FREQ[v - 1])); }
+  if (type === "balance") { box.className = "list"; down.forEach(v => add(v, BALANCE[v - 1])); }
   const fills = type === "stars" || type === "bars";
-  function paint(v) {
-    btns.forEach(b => { const bv = +b.dataset.v; b.classList.toggle("on", fills ? bv <= v : bv === v); });
-    cap.textContent = (type === "stars" || type === "bars" || type === "grade") && v ? v + " of 5 · " + LABELS[v - 1].replace("Needs imp.", "Needs improvement") : "";
+  let picked = null;
+  function paint(v, el) {
+    btns.forEach((b, i) => {
+      const bv = +b.dataset.v;
+      const on = fills ? bv <= v : (el ? b === el : bv === v && (type !== "cover" || i === btns.findIndex(x => +x.dataset.v === v)));
+      b.classList.toggle("on", on); b.setAttribute("aria-checked", on ? "true" : "false");
+    });
+    cap.textContent = coded && v ? v + " of 5 · " + LABELS[v - 1] : "";
   }
-  if (current) paint(current);
+  if (type === "cover") {
+    btns.forEach(b => b.onclick = () => { const v = +b.dataset.v; paint(v, b); onPick(v, b.textContent); });
+    if (current) {
+      const el = current.label ? btns.find(b => b.textContent === current.label) : null;
+      paint(current.v, el || null);
+    }
+  } else if (current) paint(current.v);
   return wrap;
 }
 
@@ -374,7 +432,7 @@ function renderForm() {
   const host = $("crits"); host.innerHTML = "";
   const textOf = {}; CRITERIA.forEach(c => c.items.forEach(([k, t]) => textOf[k] = t));
   CRITERIA.forEach((c, ci) => {
-    const card = document.createElement("div"); card.className = "crit " + c.id; card.id = "card-" + c.id;
+    const card = document.createElement("div"); card.className = "crit tint " + c.id; card.id = "card-" + c.id;
     card.innerHTML = `<span class="cs" id="cs-${c.id}"></span><h3>${ci + 1}. ${esc(c.title)}</h3><div class="w">${esc(c.tag)} · ${c.w} points</div>`;
     const keys = layout.order[c.id].slice(); orderLog[c.id] = keys.join(",");
     if (layout.attn.crit === c.id) keys.splice(Math.min(layout.attn.pos, keys.length), 0, "attn");
@@ -382,22 +440,24 @@ function renderForm() {
       const it = document.createElement("div"); it.className = "item"; it.id = "it-" + key;
       const isAttn = key === "attn";
       const type = isAttn ? layout.attn.type : layout.types[key];
-      const q = document.createElement("div"); q.className = "q";
+      const q = document.createElement("div"); q.className = "q"; q.id = "q-" + key;
       q.textContent = isAttn ? "For this item, please choose " + labelFor(type, layout.attn.target) + "." : textOf[key];
       it.appendChild(q);
-      it.appendChild(buildWidget(type, isAttn ? attnVal : ratings[key], v => {
+      const cur = isAttn ? (attnVal ? { v: attnVal } : null) : (ratings[key] ? { v: ratings[key], label: (comments._cover || {})[key] } : null);
+      it.appendChild(buildWidget(type, "q-" + key, cur, (v, label) => {
         if (isAttn) attnVal = v; else ratings[key] = v;
+        if (label) comments._cover = Object.assign({}, comments._cover, { [key]: label });
         it.classList.remove("missing"); saveDraft(); update();
       }));
       card.appendChild(it);
     });
     const add = document.createElement("button"); add.type = "button"; add.className = "addc";
     const ta = document.createElement("textarea"); ta.placeholder = "Optional comment on " + c.title.toLowerCase();
+    ta.setAttribute("aria-label", "Comment on " + c.title);
     ta.value = comments[c.id] || ""; ta.oninput = () => { comments[c.id] = ta.value; saveDraft(); };
-    if (!ta.value) ta.classList.add("hidden");
-    add.textContent = ta.value ? "" : "+ Add a comment (optional)";
+    add.textContent = "+ Add a comment (optional)";
     add.onclick = () => { ta.classList.remove("hidden"); add.classList.add("hidden"); ta.focus(); };
-    if (ta.value) add.classList.add("hidden");
+    if (ta.value) add.classList.add("hidden"); else ta.classList.add("hidden");
     card.appendChild(add); card.appendChild(ta);
     host.appendChild(card);
   });
@@ -405,8 +465,6 @@ function renderForm() {
   $("c-overall").oninput = e => { comments.overall = e.target.value; saveDraft(); };
   update();
 }
-
-function esc(s) { return String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch])); }
 
 function scores() {
   const per = {}; let total = 0, complete = true;
@@ -421,7 +479,7 @@ function scores() {
 
 function update() {
   const n = ALL_ITEMS.filter(k => ratings[k]).length + (attnVal ? 1 : 0), N = ALL_ITEMS.length + 1;
-  $("tcount").textContent = n + " of " + N + " answered";
+  $("tcount").textContent = n + "/" + N + " answered";
   $("progbar").style.width = (100 * n / N) + "%";
   const s = scores();
   $("total").textContent = s.complete ? s.total.toFixed(1) : "–";
@@ -433,90 +491,107 @@ function update() {
 function saveDraft() { if (team) store.set("msa641_draft_" + team.id, { ratings, comments, startedAt, attnVal, layout }); }
 
 function stats() {
-  const v = ALL_ITEMS.map(k => ratings[k]);
+  const v = ROT_ITEMS.map(k => ratings[k]);
   const mean = v.reduce((a, b) => a + b, 0) / v.length;
   const sd = Math.sqrt(v.reduce((a, b) => a + (b - mean) ** 2, 0) / v.length);
   const distinct = new Set(v).size;
-  const flatCrit = CRITERIA.filter(c => new Set(c.items.map(i => ratings[i[0]])).size === 1).length;
+  const flatCrit = CRITERIA.filter(c => {
+    const r = c.items.map(i => i[0]).filter(k => !FIXED[k]);
+    return r.length > 1 && new Set(r.map(k => ratings[k])).size === 1;
+  }).length;
   return { sd: Math.round(sd * 1000) / 1000, distinct, flatCrit };
 }
+
+function openModal() { $("m-flat").classList.remove("hidden"); document.body.classList.add("lock"); setTimeout(() => $("flatwhy").focus(), 50); }
+function closeModal() { $("m-flat").classList.add("hidden"); document.body.classList.remove("lock"); }
 
 $("submit").onclick = () => {
   const missing = ALL_ITEMS.filter(k => !ratings[k]).concat(attnVal ? [] : ["attn"]);
   if (missing.length) {
-    missing.forEach(k => $("it-" + k).classList.add("missing"));
-    $("err").textContent = missing.length + (missing.length === 1 ? " point still needs" : " points still need") + " a rating.";
-    $("it-" + missing[0]).scrollIntoView({ behavior: "smooth", block: "center" });
+    missing.forEach(k => { const el = $("it-" + k); if (el) el.classList.add("missing"); });
+    $("err").textContent = missing.length + (missing.length === 1 ? " point still needs" : " points still need") + " an answer.";
+    const first = $("it-" + missing[0]); if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
     return;
   }
   const st = stats();
   if (st.distinct === 1 && !flatReason) {
-    $("flatmsg").textContent = "You gave all " + ALL_ITEMS.length + " points a " + ratings[ALL_ITEMS[0]] + ".";
-    $("flatwhy").value = ""; $("flatwhy").style.borderColor = ""; $("m-flat").classList.remove("hidden");
+    $("flatmsg").textContent = "You gave all " + ROT_ITEMS.length + " rated points a " + ratings[ROT_ITEMS[0]] + " out of 5.";
+    $("flatwhy").value = ""; $("flatwhy").style.borderColor = ""; openModal();
     return;
   }
   send(st);
 };
-$("flatreview").onclick = () => { $("m-flat").classList.add("hidden"); $("crits").scrollIntoView({ behavior: "smooth" }); };
+$("flatreview").onclick = () => { closeModal(); $("card-c1").scrollIntoView({ behavior: "smooth" }); };
 $("flatok").onclick = () => {
   const r = $("flatwhy").value.trim();
   if (r.length < 15) { $("flatwhy").focus(); $("flatwhy").style.borderColor = "var(--warn)"; return; }
-  flatReason = r; $("m-flat").classList.add("hidden"); send(stats());
+  flatReason = r; closeModal(); send(stats());
 };
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("m-flat").classList.contains("hidden")) closeModal(); });
+
+async function serverTeams() {
+  const r = await fetch(SCRIPT_URL + "?device=" + encodeURIComponent(device), { cache: "no-store" });
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  const j = await r.json();
+  if (!j || !j.ok || !Array.isArray(j.teams)) throw new Error("bad reply");
+  return j.teams;
+}
 
 async function send(st) {
-  if (!navigator.onLine) { $("err").textContent = "No internet connection. Your answers are saved on this phone; try again when connected."; return; }
+  const failMsg = "Could not send. Your answers are saved on this phone. Check your connection and tap Submit again.";
+  if (!navigator.onLine) { $("err").textContent = failMsg; return; }
   const s = scores(); const now = new Date();
   const payload = {
     subId: device + "-" + team.id + "-" + startedAt,
-    course: COURSE, team: team.id, teamNum: team.n, teamNames: team.names, topic: team.topic,
+    course: COURSE, team: team.id,
     localTime: now.toISOString(), localDisplay: fmtNow(now),
     tz: (Intl.DateTimeFormat().resolvedOptions().timeZone || ""),
     ratings, comments: { c1: comments.c1 || "", c2: comments.c2 || "", c3: comments.c3 || "", c4: comments.c4 || "",
       c5: comments.c5 || "", c6: comments.c6 || "", overall: comments.overall || "" },
     attn: { target: layout.attn.target, value: attnVal, style: layout.attn.type },
-    styles: ALL_ITEMS.map(k => k + ":" + layout.types[k]).join(","),
+    styles: ALL_ITEMS.map(k => k + ":" + layout.types[k] + ((comments._cover || {})[k] ? "(" + comments._cover[k] + ")" : "")).join(","),
     clientTotal: s.total, durationSec: Math.round((Date.now() - startedAt) / 1000),
     sd: st.sd, distinct: st.distinct, flatCriteria: st.flatCrit, flatReason, order: orderLog, device
   };
   const btn = $("submit"); btn.disabled = true; btn.textContent = "Submitting…"; $("err").textContent = "";
   try {
-    if (!SCRIPT_URL.startsWith("https://")) throw new Error("Form not connected to the database yet.");
     let ok = false;
     try {
       const r = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-      const j = await r.json(); if (!j.ok) throw new Error(j.error || "Server error"); ok = true;
+      if (!r.ok) throw new TypeError("HTTP " + r.status);
+      const j = await r.json();
+      if (!j || !j.ok) throw new Error((j && j.error) || "Server error");
+      ok = true;
     } catch (e) {
-      if (e instanceof TypeError) {
-        await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-        ok = true;
-      } else throw e;
+      if (!(e instanceof TypeError)) throw e;
+      await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+      const teams = await serverTeams();
+      ok = teams.includes(team.id);
+      if (!ok) throw new Error("not confirmed");
     }
     if (ok) {
       store.set("msa641_done_" + team.id, now.toISOString()); store.del("msa641_draft_" + team.id);
-      $("dscore").textContent = s.total.toFixed(1);
+      $("dscore").textContent = s.total.toFixed(1) + " / 100";
       $("dteam").textContent = "Group " + team.n + " (" + team.names + ") · " + fmtNow(now);
-      renderTeams(); show("s-done");
+      renderTeams(); pickMsg(""); show("s-done"); $("h-done").focus();
     }
   } catch (e) {
-    $("err").textContent = "Could not submit: " + e.message + " Your answers are saved; tap Submit to try again.";
+    $("err").textContent = failMsg;
   } finally { btn.disabled = false; btn.textContent = "Submit evaluation"; }
 }
 
 async function syncDone() {
   const locked = TEAMS.filter(t => store.get("msa641_done_" + t.id));
-  if (!locked.length || !SCRIPT_URL.startsWith("https://")) return;
+  if (!locked.length) return;
   try {
-    const r = await fetch(SCRIPT_URL + "?device=" + encodeURIComponent(device));
-    const j = await r.json();
-    if (!j.ok || !Array.isArray(j.teams)) return;
+    const teams = await serverTeams();
     let changed = false;
-    locked.forEach(t => { if (!j.teams.includes(t.id)) { store.del("msa641_done_" + t.id); changed = true; } });
+    locked.forEach(t => { if (!teams.includes(t.id)) { store.del("msa641_done_" + t.id); changed = true; } });
     if (changed && !$("s-pick").classList.contains("hidden")) renderTeams();
   } catch (e) {}
 }
 
-$("back").onclick = () => { renderTeams(); show("s-pick"); syncDone(); };
+$("back").onclick = () => { renderTeams(); pickMsg(""); show("s-pick"); syncDone(); };
 $("again").onclick = () => { renderTeams(); show("s-pick"); };
 renderTeams(); syncDone();
 </script>
