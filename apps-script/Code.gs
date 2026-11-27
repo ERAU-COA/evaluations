@@ -7,13 +7,8 @@ var ITEMS = {
   c5: ['c5a', 'c5b', 'c5c', 'c5d'],
   c6: ['c6a', 'c6b', 'c6c', 'c6d']
 };
-var TEAMS = { G1: 'Gordon & Romane', G2: 'Christian & Aaron', G3: 'Gal & Max', G4: 'Sukwoo & Ishaa' };
-var TOPICS = {
-  G1: 'Aircraft Cannibalization as an Inventory & Procurement Strategy',
-  G2: 'Airbus A320 Family Production Ramp-Up Strategy',
-  G3: 'Production Leveling; Supply Chain Planning at Embraer (Praetor 600E)',
-  G4: 'GE’s Lean Evolution & Post-Split Aerospace Production Capacity'
-};
+var GAP_MIN = 6;
+var REPEAT_MIN = 8;
 var FIXED = { c3a: 1, c3c: 1, c3d: 1, c4c: 1, c4d: 1, c4e: 1, c5d: 1 };
 var YESNO = { c4c: 1, c4d: 1 };
 var FREQ3 = { c3a: 1, c3c: 1, c3d: 1 };
@@ -28,7 +23,7 @@ function allItems_() {
 }
 
 function headers_() {
-  return ['Date', 'Time', 'Phone local time', 'Time zone', 'Team', 'Group members', 'Topic']
+  return ['Date', 'Time', 'Phone local time', 'Time zone', 'Presentation', 'Presenters', 'Topic']
     .concat(allItems_())
     .concat(['C1 (20)', 'C2 (20)', 'C3 (20)', 'C4 (10)', 'C5 (10)', 'C6 (20)', 'Total (100)'])
     .concat(['Comment C1', 'Comment C2', 'Comment C3', 'Comment C4', 'Comment C5', 'Comment C6', 'Overall comment'])
@@ -36,7 +31,8 @@ function headers_() {
              'Straight-line reason', 'Too-fast flag', 'Duplicate flag', 'Device token', 'Submission ID', 'Item order',
              'Attention check', 'Attention answer', 'Rating styles', 'Phone ISO time',
              'Fingerprint ID', 'Device model', 'OS and browser', 'Screen', 'GPU', 'Device details',
-             'First answer time', 'Last answer time', 'Minutes since previous (same phone)', 'Submitted (epoch ms)']);
+             'First answer time', 'Last answer time', 'Minutes since previous (same phone)', 'Submitted (epoch ms)',
+             'Offset from presentation mean']);
 }
 
 function setup() {
@@ -46,35 +42,35 @@ function setup() {
   sh.getRange(1, 1, 1, sh.getMaxColumns()).clearContent();
   sh.getRange(1, 1, 1, h.length).setValues([h]).setFontWeight('bold');
   sh.setFrozenRows(1);
-  var teamC = h.indexOf('Team') + 1;
-  sh.getRange(2, teamC, sh.getMaxRows() - 1, 1).setDataValidation(
-    SpreadsheetApp.newDataValidation().requireValueInList(Object.keys(TEAMS), true).setAllowInvalid(false).build());
+  sh.getRange(2, 1, sh.getMaxRows() - 1, h.length).clearDataValidations();
 
   var sum = ss.getSheetByName('Summary') || ss.insertSheet('Summary');
   sum.clear();
-  var totalCol = colLetter_(h.indexOf('Total (100)') + 1);
-  var flagCol = colLetter_(h.indexOf('Straight-line flag') + 1);
-  var attCol = colLetter_(h.indexOf('Attention check') + 1);
-  var dupCol = colLetter_(h.indexOf('Duplicate flag') + 1);
-  var rows = [['Team', 'Group members', 'Evaluations', 'Mean total', 'Mean total (clean)', 'Min', 'Max', 'Flagged rows']];
-  Object.keys(TEAMS).forEach(function (t, i) {
-    var r = i + 2;
-    var teamCol = colLetter_(h.indexOf('Team') + 1);
-    var tr = SHEET + '!' + teamCol + ':' + teamCol, tot = SHEET + '!' + totalCol + ':' + totalCol;
-    var fl = SHEET + '!' + flagCol + ':' + flagCol, du = SHEET + '!' + dupCol + ':' + dupCol;
-    var at = SHEET + '!' + attCol + ':' + attCol;
-    rows.push([t, TEAMS[t],
-      '=COUNTIF(' + tr + ',A' + r + ')',
-      '=IFERROR(ROUND(AVERAGEIF(' + tr + ',A' + r + ',' + tot + '),1),"")',
-      '=IFERROR(ROUND(AVERAGEIFS(' + tot + ',' + tr + ',A' + r + ',' + fl + ',"",' + du + ',"",' + at + ',"<>FAIL"),1),"")',
-      '=IF(C' + r + '=0,"",MINIFS(' + tot + ',' + tr + ',A' + r + '))',
-      '=IF(C' + r + '=0,"",MAXIFS(' + tot + ',' + tr + ',A' + r + '))',
-      '=C' + r + '-COUNTIFS(' + tr + ',A' + r + ',' + fl + ',"",' + du + ',"",' + at + ',"<>FAIL")']);
-  });
-  sum.getRange(1, 1, rows.length, rows[0].length).setValues(rows);
-  sum.getRange(1, 1, 1, rows[0].length).setFontWeight('bold');
-  sum.getRange(rows.length + 2, 1).setValue('Pick G1-G4 in the Team column of Responses to assign each row to a presentation.');
-  sum.getRange(rows.length + 3, 1).setValue('Mean total (clean) leaves out straight-line, duplicate and failed-attention-check submissions.');
+  var L = function (name) { return colLetter_(h.indexOf(name) + 1); };
+  var R = function (name) { return SHEET + '!' + L(name) + ':' + L(name); };
+  var pr = R('Presentation'), tot = R('Total (100)'), fl = R('Straight-line flag'), du = R('Duplicate flag');
+  var at = R('Attention check'), names = R('Presenters');
+  var P = L('Presentation'), T = L('Total (100)'), D = L('Device token'), O = L('Offset from presentation mean');
+  sum.getRange(1, 1).setFormula('=QUERY(' + SHEET + '!A:' + O + ',"select ' + P + ', count(' + T + '), avg(' + T + '), min(' + T + '), max(' + T +
+    ') where ' + P + ' is not null group by ' + P + ' order by ' + P + ' label ' + P + ' \'Presentation\', count(' + T + ') \'Evaluations\', avg(' + T +
+    ') \'Mean total\', min(' + T + ') \'Min\', max(' + T + ') \'Max\' format avg(' + T + ') \'0.0\'",1)');
+  sum.getRange(1, 6, 1, 3).setValues([['Mean total (clean)', 'Flagged rows', 'Presenters']]);
+  var f = [];
+  for (var r = 2; r <= 41; r++) {
+    f.push(['=IF(A' + r + '="","",IFERROR(ROUND(AVERAGEIFS(' + tot + ',' + pr + ',A' + r + ',' + fl + ',"",' + du + ',"",' + at + ',"<>FAIL"),1),""))',
+            '=IF(A' + r + '="","",B' + r + '-COUNTIFS(' + pr + ',A' + r + ',' + fl + ',"",' + du + ',"",' + at + ',"<>FAIL"))',
+            '=IF(A' + r + '="","",IFERROR(INDEX(FILTER(' + names + ',' + pr + '=A' + r + ',' + names + '<>""),1),""))']);
+  }
+  sum.getRange(2, 6, f.length, 3).setFormulas(f);
+  sum.getRange(1, 10).setFormula('=QUERY(' + SHEET + '!A:' + O + ',"select ' + D + ', count(' + T + '), avg(' + O + ') where ' + D +
+    ' is not null and ' + O + ' is not null group by ' + D + ' order by avg(' + O + ') desc label ' + D + ' \'Phone (device token)\', count(' + T +
+    ') \'Evaluations\', avg(' + O + ') \'Leniency (avg points above class)\' format avg(' + O + ') \'0.0\'",1)');
+  sum.getRange(1, 1, 1, 12).setFontWeight('bold');
+  sum.getRange(44, 1, 4, 1).setValues([
+    ['Rows are grouped into presentations automatically. A new number starts after a ' + GAP_MIN + '-minute pause in submissions, or when a phone that already rated the current presentation submits again at least ' + REPEAT_MIN + ' minutes later.'],
+    ['To move a row, change its number in the Presentation column of Responses. Type the presenters’ names in the Presenters column of any one row.'],
+    ['Mean total (clean) leaves out straight-line, duplicate and failed-attention-check submissions.'],
+    ['Leniency: how many points a phone gives above (+) or below (-) the class mean for the same presentation, averaged over its ratings.']]);
 }
 
 function colLetter_(n) {
@@ -91,7 +87,7 @@ function doGet(e) {
   var last = sh ? sh.getLastRow() : 0;
   if (last > 1) {
     var devs = sh.getRange(2, h.indexOf('Device token') + 1, last - 1, 1).getValues();
-    var tms = sh.getRange(2, h.indexOf('Team') + 1, last - 1, 1).getValues();
+    var tms = sh.getRange(2, h.indexOf('Presentation') + 1, last - 1, 1).getValues();
     for (var i = 0; i < devs.length; i++) if (String(devs[i][0]) === clean_(device)) teams[tms[i][0]] = 1;
     if (sub) {
       var subs = sh.getRange(2, h.indexOf('Submission ID') + 1, last - 1, 1).getValues();
@@ -106,7 +102,6 @@ function doPost(e) {
   try {
     lock.waitLock(28000);
     var d = JSON.parse(e.postData.contents);
-    var team = TEAMS[d.team] ? d.team : '';
 
     var ss = ss_();
     var sh = ss.getSheetByName(SHEET);
@@ -115,21 +110,30 @@ function doPost(e) {
 
     var subCol = h.indexOf('Submission ID') + 1, devCol = h.indexOf('Device token') + 1;
     var last = sh.getLastRow();
-    var nowMs = Date.now(), prevMs = 0;
+    var nowMs = Date.now(), prevMs = 0, pres = 1, ps = [], tots = [], atts = [];
+    var presC = h.indexOf('Presentation') + 1;
     if (last > 1) {
       var subs = sh.getRange(2, subCol, last - 1, 1).getValues();
       for (var i = 0; i < subs.length; i++) if (String(subs[i][0]) === clean_(d.subId)) return json_({ ok: true, repeat: true });
       var devs = sh.getRange(2, devCol, last - 1, 1).getValues();
       var eps = sh.getRange(2, h.indexOf('Submitted (epoch ms)') + 1, last - 1, 1).getValues();
+      ps = sh.getRange(2, presC, last - 1, 1).getValues();
+      tots = sh.getRange(2, h.indexOf('Total (100)') + 1, last - 1, 1).getValues();
+      atts = sh.getRange(2, h.indexOf('Attention check') + 1, last - 1, 1).getValues();
+      var maxP = 0, lastP = Number(ps[ps.length - 1][0]) || 0, lastEp = Number(eps[eps.length - 1][0]) || 0, seen = 0;
       for (var k = 0; k < devs.length; k++) {
-        var ek = Number(eps[k][0]);
-        if (String(devs[k][0]) === clean_(d.device) && ek > prevMs) prevMs = ek;
+        var ek = Number(eps[k][0]), pk = Number(ps[k][0]) || 0;
+        if (pk > maxP) maxP = pk;
+        if (String(devs[k][0]) === clean_(d.device)) {
+          if (ek > prevMs) prevMs = ek;
+          if (lastP && pk === lastP && ek > seen) seen = ek;
+        }
       }
+      pres = (!lastP || nowMs - lastEp > GAP_MIN * 60000 || (seen && nowMs - seen >= REPEAT_MIN * 60000)) ? maxP + 1 : lastP;
     }
-    var r = last + 1, teamL = colLetter_(h.indexOf('Team') + 1), devL = colLetter_(devCol);
-    var dup = '=IF(' + teamL + r + '="","",IF(COUNTIFS(' + teamL + ':' + teamL + ',' + teamL + r + ',' + devL + ':' + devL + ',' + devL + r + ')>1,"YES",""))';
-    var names = '=IF(' + teamL + r + '="","",SWITCH(' + teamL + r + Object.keys(TEAMS).map(function (t) { return ',"' + t + '","' + TEAMS[t] + '"'; }).join('') + ',""))';
-    var topic = '=IF(' + teamL + r + '="","",SWITCH(' + teamL + r + Object.keys(TOPICS).map(function (t) { return ',"' + t + '","' + TOPICS[t] + '"'; }).join('') + ',""))';
+    var r = last + 1, presL = colLetter_(presC), devL = colLetter_(devCol), totL = colLetter_(h.indexOf('Total (100)') + 1);
+    var dup = '=IF(' + presL + r + '="","",IF(COUNTIFS(' + presL + ':' + presL + ',' + presL + r + ',' + devL + ':' + devL + ',' + devL + r + ')>1,"YES",""))';
+    var offset = '=IF(OR(' + presL + r + '="",' + totL + r + '=""),"",ROUND(' + totL + r + '-AVERAGEIF(' + presL + ':' + presL + ',' + presL + r + ',' + totL + ':' + totL + '),1))';
     var hm = function (ms) { ms = Number(ms); return ms > 0 ? Utilities.formatDate(new Date(ms), Session.getScriptTimeZone(), 'HH:mm:ss') : ''; };
 
     var items = allItems_(), vals = [], crit = {}, total = 0;
@@ -162,7 +166,7 @@ function doPost(e) {
     var fp = (d.fp && typeof d.fp === 'object') ? d.fp : {};
     var attnRes = (Number(a.value) === Number(a.target) && (Number(a.target) === 2 || Number(a.target) === 4)) ? 'PASS' : 'FAIL';
     var row = [Utilities.formatDate(now, stz, 'yyyy-MM-dd'), Utilities.formatDate(now, stz, 'HH:mm:ss'),
-               clean_(d.localDisplay), clean_(d.tz), team, names, topic]
+               clean_(d.localDisplay), clean_(d.tz), pres, '', '']
       .concat(vals)
       .concat([crit.c1, crit.c2, crit.c3, crit.c4, crit.c5, crit.c6, total])
       .concat([c.c1, c.c2, c.c3, c.c4, c.c5, c.c6, c.overall].map(clean_))
@@ -173,9 +177,11 @@ function doPost(e) {
                clean_(fp.id), clean_(fp.model), clean_(fp.ua),
                clean_(fp.screen ? fp.screen + ' @' + fp.dpr + 'x' : ''), clean_([fp.glVendor, fp.glRenderer].filter(Boolean).join(' / ')),
                clean_(JSON.stringify(fp)),
-               hm(d.firstAt), hm(d.lastAt), prevMs ? Math.round((nowMs - prevMs) / 6000) / 10 : '', nowMs]);
+               hm(d.firstAt), hm(d.lastAt), prevMs ? Math.round((nowMs - prevMs) / 6000) / 10 : '', nowMs, offset]);
     sh.appendRow(row);
-    return json_({ ok: true, total: total });
+    var sumT = attnRes === 'FAIL' ? 0 : total, n = attnRes === 'FAIL' ? 0 : 1;
+    for (var q = 0; q < ps.length; q++) if (Number(ps[q][0]) === pres && atts[q][0] !== 'FAIL' && tots[q][0] !== '') { sumT += Number(tots[q][0]); n++; }
+    return json_({ ok: true, total: total, presentation: pres, classN: n, classAvg: n ? Math.round(sumT / n * 10) / 10 : null });
   } catch (err) {
     return json_({ ok: false, error: String(err) });
   } finally {
