@@ -20,34 +20,39 @@
     --warn: #b42318;
     --ok: #1a7f37;
     --bar: #c4ccd5;
+    --btn: #ffffff;
+    --sep: rgba(0,0,0,.08);
+    --t1: #eaf2ff; --t2: #e9f7ee; --t3: #fff3e2; --t4: #f2ecff; --t5: #e5f6f7; --t6: #ffecf0;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #0f1419; --card: #1a2027; --text: #e8ebef; --muted: #9aa4b0;
       --line: #2f3843; --sel: #4c8dff; --accent: #4c8dff; --bar: #4f5b69;
+      --btn: #11161b; --sep: rgba(255,255,255,.08);
+      --t1: #172233; --t2: #15261d; --t3: #2a2216; --t4: #211b31; --t5: #13272a; --t6: #2c1920;
     }
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; background: var(--bg); color: var(--text);
-    font: 17px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    font: 18px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
   body { padding-bottom: env(safe-area-inset-bottom); }
   .wrap { max-width: 640px; margin: 0 auto; padding: 0 14px 40px; }
   header.top { background: var(--navy); color: #fff; padding: 18px 14px 16px;
     padding-top: calc(18px + env(safe-area-inset-top)); }
   header.top .inner { max-width: 640px; margin: 0 auto; }
-  header.top h1 { font-size: 21px; margin: 0 0 4px; }
-  header.top .sub { font-size: 14px; opacity: .85; }
-  .when { font-size: 14px; opacity: .85; margin-top: 6px; }
-  h2 { font-size: 18px; margin: 22px 2px 10px; }
-  .note { color: var(--muted); font-size: 14px; margin: 8px 2px 14px; }
+  header.top h1 { font-size: 23px; margin: 0 0 4px; }
+  header.top .sub { font-size: 15px; opacity: .85; }
+  .when { font-size: 15px; opacity: .85; margin-top: 6px; }
+  h2 { font-size: 20px; margin: 22px 2px 10px; }
+  .note { color: var(--muted); font-size: 16px; margin: 8px 2px 14px; }
   .team { display: block; width: 100%; text-align: left; background: var(--card); color: var(--text);
     border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin: 0 0 12px; font: inherit; cursor: pointer; }
   .team:active { transform: scale(.99); }
-  .team .g { font-size: 13px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .04em; }
-  .team .names { font-weight: 700; font-size: 18px; margin: 2px 0 4px; }
-  .team .topic { color: var(--muted); font-size: 15px; }
+  .team .g { font-size: 14px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .04em; }
+  .team .names { font-weight: 700; font-size: 20px; margin: 2px 0 4px; }
+  .team .topic { color: var(--muted); font-size: 16px; }
   .team.done { opacity: .55; }
-  .team .badge { float: right; font-size: 12px; font-weight: 700; color: var(--ok); }
+  .team .badge { float: right; font-size: 13px; font-weight: 700; color: var(--ok); }
 
   .bar { position: sticky; top: 0; z-index: 10; background: var(--navy); color: #fff;
     padding: 10px 14px; padding-top: calc(10px + env(safe-area-inset-top)); }
@@ -55,57 +60,60 @@
   .bar .back { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.4);
     border-radius: 10px; padding: 6px 10px; font: inherit; font-size: 15px; min-height: 44px; }
   .bar .t { flex: 1; min-width: 0; }
-  .bar .t b { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .bar .t span { font-size: 13px; opacity: .85; }
+  .bar .t b { display: block; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar .t span { font-size: 14px; opacity: .85; }
   .bar .score { text-align: right; }
-  .bar .score b { font-size: 22px; }
-  .bar .score span { display: block; font-size: 11px; opacity: .8; }
+  .bar .score b { font-size: 24px; }
+  .bar .score span { display: block; font-size: 12px; opacity: .8; }
   .prog { height: 4px; background: rgba(255,255,255,.2); }
   .prog i { display: block; height: 100%; width: 0; background: #7fb3ff; transition: width .2s; }
 
-  .crit { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 14px 6px; margin: 14px 0; }
-  .crit h3 { font-size: 17px; margin: 0 0 2px; }
-  .crit .w { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
-  .crit .cs { float: right; font-size: 14px; font-weight: 700; color: var(--accent); }
-  .item { padding: 10px 0 12px; border-top: 1px solid var(--line); }
-  .item .q { font-size: 16px; margin-bottom: 8px; }
+  .crit { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px 16px 8px; margin: 18px 0; }
+  .crit.c1 { background: var(--t1); } .crit.c2 { background: var(--t2); } .crit.c3 { background: var(--t3); }
+  .crit.c4 { background: var(--t4); } .crit.c5 { background: var(--t5); } .crit.c6 { background: var(--t6); }
+  .crit[class*=" c"] { border-color: transparent; }
+  .crit h3 { font-size: 21px; margin: 0 0 2px; }
+  .crit .w { font-size: 15px; color: var(--muted); margin-bottom: 10px; }
+  .crit .cs { float: right; font-size: 16px; font-weight: 700; color: var(--accent); }
+  .item { padding: 16px 0 14px; border-top: 1px solid var(--sep); }
+  .item .q { font-size: 19px; font-weight: 600; line-height: 1.35; margin-bottom: 6px; }
   .item.missing .q { color: var(--warn); font-weight: 600; }
   .scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-  .scale button { border: 1.5px solid var(--line); background: var(--bg); color: var(--text); border-radius: 10px;
-    padding: 8px 0 6px; font: inherit; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .scale button b { font-size: 19px; line-height: 1; }
-  .scale button small { font-size: 10px; color: var(--muted); margin-top: 3px; line-height: 1.1; }
+  .scale button { border: 1.5px solid var(--line); background: var(--btn); color: var(--text); border-radius: 10px;
+    padding: 8px 0 6px; font: inherit; min-height: 58px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .scale button b { font-size: 22px; line-height: 1; }
+  .scale button small { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.1; }
   .scale button.on { background: var(--sel); border-color: var(--sel); color: #fff; }
   .scale button.on small { color: rgba(255,255,255,.85); }
-  .hint { font-size: 13px; color: var(--muted); margin: -2px 0 8px; font-style: italic; }
-  .cap { font-size: 13px; color: var(--accent); font-weight: 600; min-height: 18px; margin-top: 4px; }
-  .scale.grade button b { font-size: 22px; }
+  .hint { font-size: 15px; color: var(--muted); margin: 0 0 10px; font-style: italic; }
+  .cap { font-size: 15px; color: var(--accent); font-weight: 600; min-height: 18px; margin-top: 4px; }
+  .scale.grade button b { font-size: 25px; }
   .stars { display: flex; gap: 4px; }
-  .stars button { flex: 1; border: none; background: none; font-size: 40px; line-height: 1; padding: 4px 0;
+  .stars button { flex: 1; border: none; background: none; font-size: 46px; line-height: 1; padding: 4px 0;
     color: var(--bar); font-family: inherit; }
   .stars button.on { color: #e3a008; }
-  .bars { display: flex; gap: 8px; align-items: flex-end; height: 76px; }
+  .bars { display: flex; gap: 10px; align-items: flex-end; height: 80px; }
   .bars button { flex: 1; height: 100%; border: none; background: none; padding: 0; display: flex; align-items: flex-end; }
   .bars button i { display: block; width: 100%; border-radius: 6px 6px 2px 2px; background: var(--bar); }
   .bars button.on i { background: var(--sel); }
-  .list { display: grid; gap: 6px; }
-  .list button { text-align: left; border: 1.5px solid var(--line); background: var(--bg); color: var(--text);
-    border-radius: 10px; padding: 11px 14px; font: inherit; font-size: 16px; min-height: 46px; }
+  .list { display: grid; gap: 8px; }
+  .list button { text-align: left; border: 1.5px solid var(--line); background: var(--btn); color: var(--text);
+    border-radius: 10px; padding: 12px 16px; font: inherit; font-size: 18px; min-height: 52px; }
   .list button.on { background: var(--sel); border-color: var(--sel); color: #fff; font-weight: 600; }
-  .addc { background: none; border: none; color: var(--accent); font: inherit; font-size: 15px; padding: 10px 0; }
+  .addc { background: none; border: none; color: var(--accent); font: inherit; font-size: 17px; padding: 10px 0; }
   textarea { width: 100%; min-height: 84px; border: 1.5px solid var(--line); border-radius: 10px; padding: 10px;
-    font: inherit; font-size: 16px; background: var(--bg); color: var(--text); resize: vertical; margin: 4px 0 10px; }
+    font: inherit; font-size: 17px; background: var(--btn); color: var(--text); resize: vertical; margin: 4px 0 10px; }
   .submit { display: block; width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 14px;
-    padding: 16px; font: inherit; font-size: 18px; font-weight: 700; margin-top: 18px; }
+    padding: 18px; font: inherit; font-size: 20px; font-weight: 700; margin-top: 18px; }
   .submit:disabled { opacity: .6; }
-  .err { color: var(--warn); font-size: 15px; margin: 10px 2px; min-height: 1em; }
+  .err { color: var(--warn); font-size: 16px; margin: 10px 2px; min-height: 1em; }
   .hidden { display: none !important; }
 
   .modal { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
   .sheet { background: var(--card); color: var(--text); width: 100%; max-width: 640px; border-radius: 18px 18px 0 0;
     padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); }
   .sheet h3 { margin: 0 0 8px; }
-  .sheet p { margin: 0 0 10px; color: var(--muted); font-size: 15px; }
+  .sheet p { margin: 0 0 10px; color: var(--muted); font-size: 16px; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
   .btn2 { border-radius: 12px; padding: 14px; font: inherit; font-weight: 700; border: 1.5px solid var(--line); background: var(--bg); color: var(--text); }
   .btn2.pri { background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -349,7 +357,7 @@ function renderForm() {
   const host = $("crits"); host.innerHTML = "";
   const textOf = {}; CRITERIA.forEach(c => c.items.forEach(([k, t]) => textOf[k] = t));
   CRITERIA.forEach((c, ci) => {
-    const card = document.createElement("div"); card.className = "crit"; card.id = "card-" + c.id;
+    const card = document.createElement("div"); card.className = "crit " + c.id; card.id = "card-" + c.id;
     card.innerHTML = `<span class="cs" id="cs-${c.id}"></span><h3>${ci + 1}. ${esc(c.title)}</h3><div class="w">${esc(c.tag)} · ${c.w} points</div>`;
     const keys = layout.order[c.id].slice(); orderLog[c.id] = keys.join(",");
     if (layout.attn.crit === c.id) keys.splice(Math.min(layout.attn.pos, keys.length), 0, "attn");
