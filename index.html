@@ -46,28 +46,12 @@
   button:focus-visible, textarea:focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }
   .wrap { max-width: 640px; margin: 0 auto; padding: 0 12px 40px;
     padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
-  header.top { background: var(--navy); color: #fff; padding: 18px 14px 16px;
-    padding-top: calc(18px + env(safe-area-inset-top)); }
-  header.top .inner { max-width: 640px; margin: 0 auto; }
-  header.top h1 { font-size: 29px; margin: 0 0 4px; line-height: 1.2; }
-  header.top .sub { font-size: 19px; opacity: .9; }
-  .when { font-size: 19px; opacity: .9; margin-top: 6px; }
   h2 { font-size: 26px; margin: 22px 2px 10px; }
   .note { color: var(--muted); font-size: 20px; margin: 8px 2px 14px; }
-  .pickmsg { color: var(--ok); font-weight: 600; font-size: 20px; margin: 0 2px 12px; }
-  .team { display: block; width: 100%; text-align: left; background: var(--card); color: var(--text);
-    border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin: 0 0 12px; font: inherit; }
-  .team .g { font-size: 17px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .04em; }
-  .team .names { font-weight: 700; font-size: 27px; margin: 2px 0 4px; }
-  .team .topic { color: var(--muted); font-size: 20px; }
-  .team.done { border: 2px solid var(--ok); }
-  .team .badge { float: right; font-size: 16px; font-weight: 700; color: var(--ok); }
 
   .bar { position: sticky; top: 0; z-index: 10; background: var(--navy); color: #fff;
     padding: 8px 12px 0; padding-top: calc(8px + env(safe-area-inset-top)); }
   .bar .inner { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 10px; padding-bottom: 8px; }
-  .bar .back { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.5);
-    border-radius: 10px; font: inherit; font-size: 28px; line-height: 1; width: 46px; height: 46px; flex: none; }
   .bar .t { flex: 1; min-width: 0; }
   .bar .t b { display: block; font-size: 21px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .bar .t span { display: block; font-size: 18px; opacity: .9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -137,22 +121,10 @@
 </head>
 <body>
 
-<section id="s-pick">
-  <header class="top"><div class="inner">
-    <h1>Peer evaluation</h1>
-  </div></header>
-  <div class="wrap">
-    <h2>Pick a team</h2>
-    <div class="pickmsg hidden" id="pickmsg" role="status"></div>
-    <div id="teams"></div>
-  </div>
-</section>
-
-<section id="s-form" class="hidden">
+<section id="s-form">
   <div class="bar">
     <div class="inner">
-      <button class="back" id="back" type="button" aria-label="Back to teams">&#8249;</button>
-      <div class="t"><b id="tname"></b><span id="tcount"></span></div>
+      <div class="t"><b>Peer evaluation</b><span id="tcount"></span></div>
       <div class="score"><b id="total">&ndash;</b><span>of 100</span></div>
     </div>
     <div class="prog"><i id="progbar"></i></div>
@@ -173,8 +145,8 @@
   <div class="wrap thanks">
     <div class="big" id="dscore"></div>
     <h2 id="h-done" tabindex="-1">Submitted. Thank you!</h2>
-    <p class="note" id="dteam"></p>
-    <button class="submit" id="again" type="button">Evaluate another team</button>
+    <p class="note" id="dwhen"></p>
+    <button class="submit" id="again" type="button">Evaluate another presentation</button>
   </div>
 </section>
 
@@ -195,14 +167,8 @@
 <script>
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxAWVroYfVEm0C3ESjLahaiW6oNMDF9mqqL40JlNszsw5vRTlURuoVqiOjFPqE6av6F/exec";
 const COURSE = "MSA 641";
-const LAYOUT_VERSION = 4;
-
-const TEAMS = [
-  { id: "G1", names: "Gordon & Romane",   topic: "Aircraft Cannibalization as an Inventory & Procurement Strategy" },
-  { id: "G2", names: "Christian & Aaron", topic: "Airbus A320 Family Production Ramp-Up Strategy" },
-  { id: "G3", names: "Gal & Max",         topic: "Production Leveling; Supply Chain Planning at Embraer (Praetor 600E)" },
-  { id: "G4", names: "Sukwoo & Ishaa",    topic: "GE’s Lean Evolution & Post-Split Aerospace Production Capacity" }
-];
+const LAYOUT_VERSION = 5;
+const DRAFT = "msa641_draft";
 
 const CRITERIA = [
   { id: "c1", title: "Preparation & group organization", tag: "Team flow", w: 20, items: [
@@ -269,7 +235,7 @@ const FIXED = { c3a: "freq", c3c: "freq", c3d: "freq", c4c: "yesall", c4d: "yesn
 const NO_AGREE = ["c2a", "c2c", "c6a", "c6c", "c6d"];
 const ROT_ITEMS = ALL_ITEMS.filter(k => !FIXED[k]);
 
-let team = null, ratings = {}, comments = {}, startedAt = null, orderLog = {}, flatReason = "", attnVal = null, layout = null;
+let ratings = {}, comments = {}, startedAt = null, orderLog = {}, flatReason = "", attnVal = null, layout = null;
 
 const $ = id => document.getElementById(id);
 const store = {
@@ -291,32 +257,8 @@ function tick() { const s = fmtNow(new Date()); $("now2").textContent = s; }
 tick(); setInterval(tick, 15000);
 
 function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
-function show(id) { ["s-pick", "s-form", "s-done"].forEach(s => $(s).classList.toggle("hidden", s !== id)); window.scrollTo(0, 0); }
+function show(id) { ["s-form", "s-done"].forEach(s => $(s).classList.toggle("hidden", s !== id)); window.scrollTo(0, 0); }
 function esc(s) { return String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch])); }
-
-function pickMsg(text) { const m = $("pickmsg"); m.textContent = text || ""; m.classList.toggle("hidden", !text); }
-
-function renderTeams() {
-  $("teams").innerHTML = "";
-  TEAMS.forEach((t, i) => {
-    const done = store.get("msa641_done_" + t.id);
-    const b = document.createElement("button");
-    b.type = "button"; b.className = "team" + (done ? " done" : "");
-    b.innerHTML = (done ? '<span class="badge">✓ Submitted</span>' : "") +
-      `<div class="names"></div><div class="topic"></div>`;
-    b.querySelector(".names").textContent = t.names;
-    b.querySelector(".topic").textContent = t.topic;
-    b.onclick = async () => {
-      pickMsg("");
-      if (store.get("msa641_done_" + t.id)) {
-        await syncDone();
-        if (store.get("msa641_done_" + t.id)) { pickMsg("You already evaluated Group " + (i + 1) + " on this phone."); return; }
-      }
-      openTeam(t, i);
-    };
-    $("teams").appendChild(b);
-  });
-}
 
 function layoutValid(L) {
   if (!L || L.v !== LAYOUT_VERSION || !L.order || !L.types || !L.attn) return false;
@@ -326,9 +268,8 @@ function layoutValid(L) {
   });
 }
 
-function openTeam(t, idx) {
-  team = Object.assign({ n: idx + 1 }, t);
-  const draft = store.get("msa641_draft_" + t.id);
+function openForm(fresh) {
+  const draft = fresh ? null : store.get(DRAFT);
   const ok = draft && layoutValid(draft.layout);
   ratings = {}; attnVal = null;
   if (ok) {
@@ -336,11 +277,10 @@ function openTeam(t, idx) {
       if (ALL_ITEMS.includes(k) && v >= 1 && v <= 5) ratings[k] = v; });
     attnVal = draft.attnVal || null;
   }
-  comments = (draft && draft.comments) || {};
+  comments = (ok && draft.comments) || {};
   startedAt = (ok && draft.startedAt) || Date.now();
   layout = ok ? draft.layout : makeLayout();
   orderLog = {}; flatReason = "";
-  $("tname").textContent = "Group " + team.n;
   $("err").textContent = "";
   renderForm();
   show("s-form");
@@ -487,7 +427,7 @@ function update() {
     $("cs-" + c.id).textContent = done ? v.toFixed(1) + " / " + c.w : ""; });
 }
 
-function saveDraft() { if (team) store.set("msa641_draft_" + team.id, { ratings, comments, startedAt, attnVal, layout }); }
+function saveDraft() { store.set(DRAFT, { ratings, comments, startedAt, attnVal, layout }); }
 
 function stats() {
   const v = ROT_ITEMS.map(k => ratings[k]);
@@ -536,7 +476,7 @@ async function serverLookup(sub) {
   const r = await fetch(SCRIPT_URL + "?device=" + encodeURIComponent(device) + (sub ? "&sub=" + encodeURIComponent(sub) : ""), { cache: "no-store" });
   if (!r.ok) throw new Error("HTTP " + r.status);
   const j = await r.json();
-  if (!j || !j.ok || !Array.isArray(j.teams)) throw new Error("bad reply");
+  if (!j || !j.ok) throw new Error("bad reply");
   return j;
 }
 
@@ -545,8 +485,8 @@ async function send(st) {
   if (!navigator.onLine) { $("err").textContent = failMsg; return; }
   const s = scores(); const now = new Date();
   const payload = {
-    subId: device + "-" + team.id + "-" + startedAt,
-    course: COURSE, team: team.id,
+    subId: device + "-" + startedAt,
+    course: COURSE, team: "",
     localTime: now.toISOString(), localDisplay: fmtNow(now),
     tz: (Intl.DateTimeFormat().resolvedOptions().timeZone || ""),
     ratings, comments: { c1: comments.c1 || "", c2: comments.c2 || "", c3: comments.c3 || "", c4: comments.c4 || "",
@@ -573,30 +513,19 @@ async function send(st) {
       if (!ok) throw new Error("not confirmed");
     }
     if (ok) {
-      store.set("msa641_done_" + team.id, now.toISOString()); store.del("msa641_draft_" + team.id);
+      store.del(DRAFT);
       $("dscore").textContent = s.total.toFixed(1) + " / 100";
-      $("dteam").textContent = "Group " + team.n + " (" + team.names + ") · " + fmtNow(now);
-      renderTeams(); pickMsg(""); show("s-done"); $("h-done").focus();
+      $("dwhen").textContent = fmtNow(now);
+      show("s-done"); $("h-done").focus();
     }
   } catch (e) {
     $("err").textContent = failMsg;
   } finally { btn.disabled = false; btn.textContent = "Submit evaluation"; }
 }
 
-async function syncDone() {
-  const locked = TEAMS.filter(t => store.get("msa641_done_" + t.id));
-  if (!locked.length) return;
-  try {
-    const teams = (await serverLookup()).teams;
-    let changed = false;
-    locked.forEach(t => { if (!teams.includes(t.id)) { store.del("msa641_done_" + t.id); changed = true; } });
-    if (changed && !$("s-pick").classList.contains("hidden")) renderTeams();
-  } catch (e) {}
-}
-
-$("back").onclick = () => { renderTeams(); pickMsg(""); show("s-pick"); syncDone(); };
-$("again").onclick = () => { renderTeams(); show("s-pick"); };
-renderTeams(); syncDone();
+["G1", "G2", "G3", "G4"].forEach(g => { store.del("msa641_draft_" + g); store.del("msa641_done_" + g); });
+$("again").onclick = () => openForm(true);
+openForm(false);
 </script>
 </body>
 </html>

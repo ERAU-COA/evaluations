@@ -100,7 +100,7 @@ function doPost(e) {
   try {
     lock.waitLock(20000);
     var d = JSON.parse(e.postData.contents);
-    if (!TEAMS[d.team]) return json_({ ok: false, error: 'Unknown team.' });
+    var team = TEAMS[d.team] ? d.team : '';
 
     var ss = ss_();
     var sh = ss.getSheetByName(SHEET);
@@ -114,8 +114,13 @@ function doPost(e) {
       var subs = sh.getRange(2, subCol, last - 1, 1).getValues();
       for (var i = 0; i < subs.length; i++) if (String(subs[i][0]) === clean_(d.subId)) return json_({ ok: true, repeat: true });
       var devs = sh.getRange(2, devCol, last - 1, 1).getValues();
-      var teams = sh.getRange(2, h.indexOf('Team') + 1, last - 1, 1).getValues();
-      for (var k = 0; k < devs.length; k++) if (String(devs[k][0]) === clean_(d.device) && teams[k][0] === d.team) dup = 'YES';
+      var times = sh.getRange(2, h.indexOf('Phone ISO time') + 1, last - 1, 1).getValues();
+      var t0 = new Date(d.localTime).getTime();
+      for (var k = 0; k < devs.length; k++) {
+        if (String(devs[k][0]) !== clean_(d.device)) continue;
+        var tk = new Date(times[k][0]).getTime();
+        if (!isNaN(t0) && !isNaN(tk) && Math.abs(t0 - tk) < 10 * 60 * 1000) dup = 'YES';
+      }
     }
 
     var items = allItems_(), vals = [], crit = {}, total = 0;
@@ -147,7 +152,7 @@ function doPost(e) {
     var a = d.attn || {};
     var attnRes = (Number(a.value) === Number(a.target) && (Number(a.target) === 2 || Number(a.target) === 4)) ? 'PASS' : 'FAIL';
     var row = [Utilities.formatDate(now, stz, 'yyyy-MM-dd'), Utilities.formatDate(now, stz, 'HH:mm:ss'),
-               clean_(d.localDisplay), clean_(d.tz), d.team, TEAMS[d.team], TOPICS[d.team]]
+               clean_(d.localDisplay), clean_(d.tz), team, TEAMS[team] || '', TOPICS[team] || '']
       .concat(vals)
       .concat([crit.c1, crit.c2, crit.c3, crit.c4, crit.c5, crit.c6, total])
       .concat([c.c1, c.c2, c.c3, c.c4, c.c5, c.c6, c.overall].map(clean_))
