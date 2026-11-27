@@ -139,13 +139,10 @@
 
 <section id="s-pick">
   <header class="top"><div class="inner">
-    <h1>Team Presentation Peer Evaluation</h1>
-    <div class="sub">MSA 641 Operations &amp; Supply Chain Management</div>
-    <div class="when" id="now1"></div>
+    <h1>Peer evaluation</h1>
   </div></header>
   <div class="wrap">
-    <p class="note">Anonymous: no name or login. The answer format changes from point to point. Comments are optional.</p>
-    <h2>Which team are you evaluating?</h2>
+    <h2>Pick a team</h2>
     <div class="pickmsg hidden" id="pickmsg" role="status"></div>
     <div id="teams"></div>
   </div>
@@ -290,7 +287,7 @@ function fmtNow(d) {
   return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" }) +
     " · " + d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 }
-function tick() { const s = fmtNow(new Date()); $("now1").textContent = s; $("now2").textContent = s; }
+function tick() { const s = fmtNow(new Date()); $("now2").textContent = s; }
 tick(); setInterval(tick, 15000);
 
 function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
@@ -306,7 +303,7 @@ function renderTeams() {
     const b = document.createElement("button");
     b.type = "button"; b.className = "team" + (done ? " done" : "");
     b.innerHTML = (done ? '<span class="badge">✓ Submitted</span>' : "") +
-      `<div class="g">Group ${i + 1}</div><div class="names"></div><div class="topic"></div>`;
+      `<div class="names"></div><div class="topic"></div>`;
     b.querySelector(".names").textContent = t.names;
     b.querySelector(".topic").textContent = t.topic;
     b.onclick = async () => {
