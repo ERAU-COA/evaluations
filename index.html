@@ -115,7 +115,8 @@
   .btn2.pri { background: var(--accent); border-color: var(--accent); color: #fff; }
 
   .thanks { text-align: center; padding: 40px 10px; }
-  .thanks .big { font-size: 54px; font-weight: 800; color: var(--accent); }
+  .thanks .big { font-size: clamp(40px, 13vw, 54px); font-weight: 800; color: var(--accent); white-space: nowrap; }
+  #s-form.busy #crits, #s-form.busy textarea { pointer-events: none; opacity: .6; }
   .thanks h2 { margin-top: 6px; }
 </style>
 </head>
@@ -155,7 +156,7 @@
     <h3 id="h-flat">Same answer throughout</h3>
     <p id="flatmsg"></p>
     <p>Please review your ratings, or give a one-sentence reason (at least 15 characters).</p>
-    <textarea id="flatwhy" aria-labelledby="h-flat" placeholder="Reason"></textarea>
+    <textarea id="flatwhy" aria-label="Reason" placeholder="Reason"></textarea>
     <div class="err" id="flaterr" role="alert"></div>
     <div class="row2">
       <button class="btn2" id="flatreview" type="button">Review ratings</button>
@@ -235,7 +236,7 @@ const FIXED = { c3a: "freq", c3c: "freq", c3d: "freq", c4c: "yesall", c4d: "yesn
 const NO_AGREE = ["c2a", "c2c", "c6a", "c6c", "c6d"];
 const ROT_ITEMS = ALL_ITEMS.filter(k => !FIXED[k]);
 
-let ratings = {}, comments = {}, startedAt = null, orderLog = {}, flatReason = "", attnVal = null, layout = null;
+let sending = false, firstAt = null, lastAt = null, ratings = {}, comments = {}, startedAt = null, orderLog = {}, flatReason = "", attnVal = null, layout = null;
 
 const $ = id => document.getElementById(id);
 const store = {
@@ -249,11 +250,67 @@ if (!device) device = Math.random().toString(36).slice(2) + Date.now().toString(
 store.set("msa641_device", device);
 try { document.cookie = "msa641_device=" + encodeURIComponent(device) + "; max-age=31536000; path=/; SameSite=Lax"; } catch (e) {}
 
+async function hashStr(t) {
+  try {
+    const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
+    return Array.from(new Uint8Array(b)).slice(0, 8).map(x => x.toString(16).padStart(2, "0")).join("");
+  } catch (e) {
+    let h = 0x811c9dc5; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+    return "f" + h.toString(16);
+  }
+}
+function canvasSig() {
+  try {
+    const c = document.createElement("canvas"); c.width = 240; c.height = 60; const x = c.getContext("2d");
+    x.textBaseline = "top"; x.font = "16px Arial"; x.fillStyle = "#f60"; x.fillRect(100, 1, 62, 20);
+    x.fillStyle = "#069"; x.fillText("MSA641 \u00e9\u00df\u2603", 2, 15); x.fillStyle = "rgba(102,204,0,.7)"; x.fillText("MSA641 \u00e9\u00df\u2603", 4, 17);
+    return c.toDataURL();
+  } catch (e) { return ""; }
+}
+function webglInfo() {
+  try {
+    const g = document.createElement("canvas").getContext("webgl"); if (!g) return {};
+    const d = g.getExtension("WEBGL_debug_renderer_info");
+    return { glVendor: d ? g.getParameter(d.UNMASKED_VENDOR_WEBGL) : g.getParameter(g.VENDOR),
+      glRenderer: d ? g.getParameter(d.UNMASKED_RENDERER_WEBGL) : g.getParameter(g.RENDERER) };
+  } catch (e) { return {}; }
+}
+async function collectFp() {
+  const n = navigator, s = screen || {}, mq = q => { try { return matchMedia(q).matches; } catch (e) { return null; } };
+  const fp = {
+    ua: n.userAgent || "", platform: n.platform || "", vendor: n.vendor || "",
+    lang: n.language || "", langs: (n.languages || []).join(","),
+    tz: (Intl.DateTimeFormat().resolvedOptions().timeZone || ""), tzOffset: new Date().getTimezoneOffset(),
+    screen: s.width + "x" + s.height, avail: s.availWidth + "x" + s.availHeight, dpr: window.devicePixelRatio || 1,
+    colorDepth: s.colorDepth, viewport: window.innerWidth + "x" + window.innerHeight,
+    cores: n.hardwareConcurrency || "", memory: n.deviceMemory || "", touch: n.maxTouchPoints || 0,
+    cookies: n.cookieEnabled, dnt: n.doNotTrack || "", pdf: n.pdfViewerEnabled === undefined ? "" : n.pdfViewerEnabled,
+    dark: mq("(prefers-color-scheme: dark)"), reducedMotion: mq("(prefers-reduced-motion: reduce)"),
+    standalone: !!(n.standalone || mq("(display-mode: standalone)")),
+    net: n.connection ? (n.connection.effectiveType || "") : ""
+  };
+  Object.assign(fp, webglInfo());
+  try {
+    if (n.userAgentData) {
+      fp.uaMobile = n.userAgentData.mobile; fp.uaPlatform = n.userAgentData.platform;
+      const h = await n.userAgentData.getHighEntropyValues(["model", "platformVersion", "architecture", "fullVersionList"]);
+      fp.model = h.model || ""; fp.platformVersion = h.platformVersion || ""; fp.arch = h.architecture || "";
+      fp.browsers = (h.fullVersionList || []).map(b => b.brand + " " + b.version).join("; ");
+    }
+  } catch (e) {}
+  fp.canvas = await hashStr(canvasSig());
+  const stable = ["ua", "platform", "lang", "langs", "tz", "screen", "dpr", "colorDepth", "cores", "memory", "touch",
+    "glVendor", "glRenderer", "model", "platformVersion"].map(k => k + "=" + (fp[k] === undefined ? "" : fp[k])).join("|");
+  fp.id = await hashStr(stable);
+  return fp;
+}
+const fpReady = collectFp().catch(() => ({}));
+
 function fmtNow(d) {
   return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" }) +
     " · " + d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 }
-function tick() { const s = fmtNow(new Date()); $("now2").textContent = s; }
+function tick() { const s = fmtNow(new Date()); $("now2").textContent = "Rate the presentation you just watched · " + s; }
 tick(); setInterval(tick, 15000);
 
 function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
@@ -262,6 +319,7 @@ function esc(s) { return String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<"
 
 function layoutValid(L) {
   if (!L || L.v !== LAYOUT_VERSION || !L.order || !L.types || !L.attn) return false;
+  if (!ROTATE.includes(L.attn.type) || !ALL_ITEMS.every(k => STYLES[L.types[k]])) return false;
   return CRITERIA.every(c => {
     const a = (L.order[c.id] || []).slice().sort().join(","), b = c.items.map(i => i[0]).sort().join(",");
     return a === b;
@@ -270,8 +328,9 @@ function layoutValid(L) {
 
 function openForm(fresh) {
   const draft = fresh ? null : store.get(DRAFT);
-  const ok = draft && layoutValid(draft.layout);
-  ratings = {}; attnVal = null;
+  const recent = draft && Date.now() - (draft.lastAt || draft.startedAt || 0) < 30 * 60 * 1000;
+  const ok = recent && layoutValid(draft.layout);
+  ratings = {}; attnVal = null; sending = false;
   if (ok) {
     Object.keys(draft.ratings || {}).forEach(k => { const v = Number(draft.ratings[k]);
       if (ALL_ITEMS.includes(k) && v >= 1 && v <= 5) ratings[k] = v; });
@@ -279,6 +338,8 @@ function openForm(fresh) {
   }
   comments = (ok && draft.comments) || {};
   startedAt = (ok && draft.startedAt) || Date.now();
+  firstAt = (ok && draft.firstAt) || null; lastAt = (ok && draft.lastAt) || null;
+  $("s-form").classList.remove("busy");
   layout = ok ? draft.layout : makeLayout();
   orderLog = {}; flatReason = "";
   $("err").textContent = "";
@@ -386,6 +447,7 @@ function renderForm() {
       it.appendChild(buildWidget(type, "q-" + key, cur, (v, label) => {
         if (isAttn) attnVal = v; else ratings[key] = v;
         if (label) comments._cover = Object.assign({}, comments._cover, { [key]: label });
+        lastAt = Date.now(); if (!firstAt) firstAt = lastAt;
         it.classList.remove("missing"); saveDraft(); update();
       }));
       card.appendChild(it);
@@ -427,7 +489,7 @@ function update() {
     $("cs-" + c.id).textContent = done ? v.toFixed(1) + " / " + c.w : ""; });
 }
 
-function saveDraft() { store.set(DRAFT, { ratings, comments, startedAt, attnVal, layout }); }
+function saveDraft() { store.set(DRAFT, { ratings, comments, startedAt, firstAt, lastAt, attnVal, layout }); }
 
 function stats() {
   const v = ROT_ITEMS.map(k => ratings[k]);
@@ -451,7 +513,7 @@ $("submit").onclick = () => {
   const missing = ALL_ITEMS.filter(k => !ratings[k]).concat(attnVal ? [] : ["attn"]);
   if (missing.length) {
     missing.forEach(k => { const el = $("it-" + k); if (el) el.classList.add("missing"); });
-    $("err").textContent = missing.length + (missing.length === 1 ? " point still needs" : " points still need") + " an answer.";
+    $("err").textContent = missing.length + (missing.length === 1 ? " question still needs" : " questions still need") + " an answer.";
     const first = document.querySelector(".item.missing"); if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
     return;
   }
@@ -482,7 +544,11 @@ async function serverLookup(sub) {
 
 async function send(st) {
   const failMsg = "Could not send. Your answers are saved on this phone. Check your connection and tap Submit again.";
+  if (sending) return;
   if (!navigator.onLine) { $("err").textContent = failMsg; return; }
+  sending = true;
+  const btn = $("submit"); btn.disabled = true; btn.textContent = "Submitting…"; $("err").textContent = "";
+  $("s-form").classList.add("busy");
   const s = scores(); const now = new Date();
   const payload = {
     subId: device + "-" + startedAt,
@@ -493,16 +559,20 @@ async function send(st) {
       c5: comments.c5 || "", c6: comments.c6 || "", overall: comments.overall || "" },
     attn: { target: layout.attn.target, value: attnVal, style: layout.attn.type },
     styles: ALL_ITEMS.map(k => k + ":" + layout.types[k] + ((comments._cover || {})[k] ? "(" + comments._cover[k] + ")" : "")).join(","),
-    clientTotal: s.total, durationSec: Math.round((Date.now() - startedAt) / 1000),
-    sd: st.sd, distinct: st.distinct, flatCriteria: st.flatCrit, flatReason, order: orderLog, device
+    firstAt, lastAt, clientTotal: s.total, durationSec: Math.round((Date.now() - startedAt) / 1000),
+    sd: st.sd, distinct: st.distinct, flatCriteria: st.flatCrit, flatReason, order: orderLog, device,
+    fp: await Promise.race([fpReady, new Promise(r => setTimeout(() => r({}), 1500))])
   };
-  const btn = $("submit"); btn.disabled = true; btn.textContent = "Submitting…"; $("err").textContent = "";
+  const post = async () => {
+    const r = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+    if (!r.ok) throw new TypeError("HTTP " + r.status);
+    return r.json();
+  };
   try {
     let ok = false;
     try {
-      const r = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-      if (!r.ok) throw new TypeError("HTTP " + r.status);
-      const j = await r.json();
+      let j = await post();
+      if (j && !j.ok && /lock/i.test(j.error || "")) { await new Promise(r => setTimeout(r, 2000)); j = await post(); }
       if (!j || !j.ok) { $("err").textContent = "Could not send: " + ((j && j.error) || "server error") + " Your answers are saved on this phone."; return; }
       ok = true;
     } catch (e) {
@@ -514,13 +584,14 @@ async function send(st) {
     }
     if (ok) {
       store.del(DRAFT);
+      const ck = "msa641_count_" + now.toDateString(), n = (Number(store.get(ck)) || 0) + 1; store.set(ck, n);
       $("dscore").textContent = s.total.toFixed(1) + " / 100";
-      $("dwhen").textContent = fmtNow(now);
+      $("dwhen").textContent = fmtNow(now) + " · Evaluation " + n + " from this phone today";
       show("s-done"); $("h-done").focus();
     }
   } catch (e) {
     $("err").textContent = failMsg;
-  } finally { btn.disabled = false; btn.textContent = "Submit evaluation"; }
+  } finally { sending = false; $("s-form").classList.remove("busy"); btn.disabled = false; btn.textContent = "Submit evaluation"; }
 }
 
 ["G1", "G2", "G3", "G4"].forEach(g => { store.del("msa641_draft_" + g); store.del("msa641_done_" + g); });
